@@ -8,7 +8,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { SessionToken } from '../../auth/entities/session-token';
+import { SessionToken } from '../../auth/entities/session-token.entity';
 import { Role } from '../../common/enums/role.enum';
 
 @Entity()

@@ -8,7 +8,7 @@ import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
 import { LoginResponseDto } from './dto/login.response.dto';
 import { RegisterDto } from './dto/register.dto';
-import { SessionToken } from './entities/session-token';
+import { SessionToken } from './entities/session-token.entity';
 
 @Injectable()
 export class AuthService {

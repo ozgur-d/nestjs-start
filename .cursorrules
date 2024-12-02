@@ -20,10 +20,10 @@ Generate code, corrections, and refactorings that comply with the basic principl
 
 ### Nomenclature
 
-- Use snake_case for all entity variables (if page starts with @Entity()).
+- Use snake_case for variables.
 - Use PascalCase for classes.
-- Use camelCase for variables, functions, and methods.
-- Use kebab-case for file, directory names, controller and url.
+- Use camelCase for functions, and methods.
+- Use kebab-case for file names, directory names, controller route names, and URL endpoints.
 - Use UPPERCASE for environment variables.
   - Avoid magic numbers and define constants.
 - Start each function with a verb.
