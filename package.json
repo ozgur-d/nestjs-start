@@ -25,9 +25,11 @@
     "@nestjs/platform-fastify": "^10.4.12",
     "@nestjs/swagger": "^8.0.7",
     "@nestjs/typeorm": "^10.0.2",
+    "@types/luxon": "^3.4.2",
     "bcrypt": "^5.1.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
+    "luxon": "^3.5.0",
     "mysql2": "^3.11.5",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
@@ -47,6 +49,7 @@
     "@types/supertest": "^6.0.2",
     "@typescript-eslint/eslint-plugin": "^8.16.0",
     "@typescript-eslint/parser": "^8.16.0",
+    "cross-env": "^7.0.3",
     "eslint": "^9.16.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
@@ -59,7 +62,6 @@
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.2",
     "webpack": "^5.96.1",
-    "webpack-node-externals": "^3.0.0",
-    "cross-env": "^7.0.3"
+    "webpack-node-externals": "^3.0.0"
   }
 }

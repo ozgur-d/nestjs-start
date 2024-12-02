@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as crypto from 'crypto';
+import { DateTime } from 'luxon';
 import { MoreThan, Repository } from 'typeorm';
 import { Users } from '../users/entities/users.entity';
 import { UsersService } from '../users/users.service';
@@ -33,8 +34,8 @@ export class AuthService {
       where: { access_token: accessToken },
     });
     if (sessionToken) {
-      sessionToken.expires_at = new Date();
-      sessionToken.expires_refresh_at = new Date();
+      sessionToken.expires_at = DateTime.now().toJSDate();
+      sessionToken.expires_refresh_at = DateTime.now().toJSDate();
       await this.sessionTokenRepository.save(sessionToken);
     }
   }
@@ -43,7 +44,7 @@ export class AuthService {
     const sessionToken = await this.sessionTokenRepository.findOne({
       where: {
         refresh_token: refreshToken,
-        expires_refresh_at: MoreThan(new Date()),
+        expires_refresh_at: MoreThan(DateTime.now().toJSDate()),
       },
       relations: ['user'],
     });
@@ -52,8 +53,8 @@ export class AuthService {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
-    sessionToken.expires_at = new Date();
-    sessionToken.expires_refresh_at = new Date();
+    sessionToken.expires_at = DateTime.now().toJSDate();
+    sessionToken.expires_refresh_at = DateTime.now().toJSDate();
     await this.sessionTokenRepository.save(sessionToken);
 
     const payload = { id: sessionToken.user.id };
@@ -81,18 +82,18 @@ export class AuthService {
     response.refresh_token = await this.generateRefreshToken();
     const expiresAt = parseInt(process.env.JWT_EXPIRES_IN || '3600', 10);
 
-    const expiresAtDate = new Date();
-    expiresAtDate.setSeconds(expiresAtDate.getSeconds() + expiresAt);
+    const expiresAtDate = DateTime.now()
+      .plus({ seconds: expiresAt })
+      .toJSDate();
     response.expires_at = expiresAtDate;
 
     const expiresRefreshAt = parseInt(
       process.env.JWT_REFRESH_EXPIRES_IN || '86400',
       10,
     );
-    const expiresRefreshAtDate = new Date();
-    expiresRefreshAtDate.setSeconds(
-      expiresRefreshAtDate.getSeconds() + expiresRefreshAt,
-    );
+    const expiresRefreshAtDate = DateTime.now()
+      .plus({ seconds: expiresRefreshAt })
+      .toJSDate();
     response.expires_refresh_at = expiresRefreshAtDate;
 
     const sessionToken = new SessionToken();
@@ -114,7 +115,10 @@ export class AuthService {
     try {
       const payload = this.jwtService.verify(accessToken);
       const token = await this.sessionTokenRepository.findOne({
-        where: { access_token: accessToken, expires_at: MoreThan(new Date()) },
+        where: {
+          access_token: accessToken,
+          expires_at: MoreThan(DateTime.now().toJSDate()),
+        },
         relations: ['user'],
       });
       if (!token || token.user.id !== payload.id) {

@@ -5,6 +5,7 @@ import {
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { DateTime } from 'luxon';
 import { AppModule } from './app.module';
 
 async function bootstrap(): Promise<void> {
@@ -52,7 +53,7 @@ bootstrap()
   .then(() =>
     console.log(
       'Server started ' +
-        new Date().toLocaleString() +
+        DateTime.now().toLocaleString(DateTime.DATETIME_MED) +
         ' "http://localhost:5656/api" ',
     ),
   )
