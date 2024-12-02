@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
-import { MoreThan, Repository } from 'typeorm';
+import { IsNull, Not, Repository } from 'typeorm';
 import { LoginDto } from '../auth/dto/login.dto';
 import { RegisterDto } from '../auth/dto/register.dto';
 import { PaginatorResponse } from '../utils/dto/paginator-response.dto';
@@ -35,13 +35,14 @@ export class UsersService {
     return null;
   }
 
-  async paginateAll(): Promise<PaginatorResponse> {
-    return await this.utilsService.adminPagination(
+  async paginateAll(): Promise<PaginatorResponse<MeResponseDto>> {
+    return await this.utilsService.getPaginatedData(
       Users,
-      { page: 1, limit: 2 },
       {
+        page: 1,
+        limit: 2,
         order: { created_at: 'DESC' },
-        where: { id: MoreThan(0) },
+        where: { id: Not(IsNull()) },
         relations: ['session_tokens'],
       },
       MeResponseDto,

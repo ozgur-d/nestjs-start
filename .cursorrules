@@ -14,13 +14,16 @@ Generate code, corrections, and refactorings that comply with the basic principl
 - Don't leave blank lines within a function.
 - One export per file.
 - Don't use @Param, always use dto.
+- Add @ApiProperty and swagger support for input dto.
+- Add @Expose() for response dto.
+- All controller responses should be wrapped with the ResponseDto class.
 
 ### Nomenclature
 
+- Use snake_case for all entity variables (if page starts with @Entity()).
 - Use PascalCase for classes.
 - Use camelCase for variables, functions, and methods.
 - Use kebab-case for file, directory names, controller and url.
-- Use snake_case for all entities variables.
 - Use UPPERCASE for environment variables.
   - Avoid magic numbers and define constants.
 - Start each function with a verb.

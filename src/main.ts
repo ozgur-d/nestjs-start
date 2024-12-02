@@ -47,10 +47,6 @@ async function bootstrap(): Promise<void> {
   app.enableCors();
 
   await app.listen(5656);
-  if (module.hot) {
-    module.hot.accept();
-    module.hot.dispose(() => app.close());
-  }
 }
 
 bootstrap()

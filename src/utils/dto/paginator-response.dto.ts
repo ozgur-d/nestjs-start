@@ -1,8 +1,8 @@
-export class PaginatorResponse {
-  totalCount: number;
-  totalPages: number;
+export interface PaginatorResponse<T> {
+  nodes: T[];
   currentPage: number;
   pageSize: number;
   hasNext: boolean;
-  nodes: [] | any;
+  totalPages: number;
+  totalCount: number;
 }

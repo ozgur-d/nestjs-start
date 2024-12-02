@@ -2,124 +2,78 @@ import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { instanceToPlain, plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
-import { DataSource } from 'typeorm';
+import { DataSource, FindOptionsOrder, FindOptionsWhere } from 'typeorm';
 import { PaginatorResponse } from './dto/paginator-response.dto';
 
-interface PageOptions {
+interface PaginationOptions<T> {
   page: number;
   limit: number;
-}
-
-interface ListOptions {
-  order?: { [key: string]: 'ASC' | 'DESC' };
-  where?: Record<string, unknown>;
+  order?: FindOptionsOrder<T>;
+  where?: FindOptionsWhere<T>;
   relations?: string[];
 }
 
 @Injectable()
 export class UtilsService {
-  constructor(@InjectDataSource() readonly dataSource: DataSource) {}
+  constructor(@InjectDataSource() private readonly dataSource: DataSource) {}
 
-  private async getPaginatedData<T>(
+  private async executeQuery<T>(
     entity: new () => T,
-    pageOptions: PageOptions,
-    listOptions: ListOptions,
+    options: PaginationOptions<T>,
   ): Promise<{ data: T[]; total: number }> {
-    const { page, limit } = pageOptions;
-    const { order, where, relations } = listOptions;
-
-    let queryBuilder = this.dataSource
-      .getRepository(entity)
-      .createQueryBuilder();
-
-    if (order) {
-      queryBuilder = queryBuilder.orderBy(order);
-    }
-
-    if (where) {
-      queryBuilder = queryBuilder.where(where);
-    }
-
-    if (relations) {
-      relations.forEach((relation) => {
-        queryBuilder = queryBuilder.leftJoinAndSelect(
-          `${entity.name}.${relation}`,
-          relation,
-        );
-      });
-    }
-
+    const { page, limit, order, where, relations } = options;
+    const repository = this.dataSource.getRepository(entity);
     const skip = (page - 1) * limit;
 
-    const [data, total] = await queryBuilder
-      .skip(skip)
-      .take(limit)
-      .getManyAndCount();
+    const [data, total] = await repository.findAndCount({
+      skip,
+      take: limit,
+      order,
+      where,
+      relations,
+    });
 
     return { data, total };
   }
 
-  async adminPagination<T, U>(
-    entity: new () => U,
-    pageOptions: PageOptions,
-    listOptions: ListOptions,
-    toMapObject: new () => T | undefined = undefined,
-  ): Promise<PaginatorResponse> {
-    const { page, limit } = pageOptions;
-    //const { order, where, relations } = listOptions;
+  async getPaginatedData<ResponseType, EntityType>(
+    entity: new () => EntityType,
+    options: PaginationOptions<EntityType>,
+    responseDto: new () => ResponseType,
+  ): Promise<PaginatorResponse<ResponseType>> {
+    const { page, limit } = options;
+    const { data, total } = await this.executeQuery(entity, options);
 
-    // eslint-disable-next-line prefer-const
-    let { data, total } = await this.getPaginatedData<U>(
-      entity,
-      pageOptions,
-      listOptions,
-    );
+    const nodes = (await this.mapToDto(data, responseDto)) as ResponseType[];
+    const pageSize = Math.min(limit, total);
 
-    const response = new PaginatorResponse();
-    response.nodes =
-      toMapObject === undefined
-        ? data
-        : await this.autoMapper<T>(data, toMapObject);
-    response.currentPage = page;
-    response.pageSize = limit > total ? total : limit;
-    response.hasNext = total > page * pageOptions.page;
-    response.totalPages = Math.ceil(total / limit);
-    response.totalCount = total;
-
-    return response;
+    return {
+      nodes,
+      currentPage: page,
+      pageSize,
+      hasNext: total > page * limit,
+      totalPages: Math.ceil(total / limit),
+      totalCount: total,
+    };
   }
 
-  //automapper array
-  async autoMapper<T>(source: any[] | any, Dto: new () => T): Promise<T[] | T> {
-    if (!Array.isArray(source)) {
-      return await this.autoMapperInternal(source, Dto);
-    }
+  public async mapToDto<T>(
+    source: unknown | unknown[],
+    dto: new () => T,
+  ): Promise<T | T[]> {
+    const mapSingle = async (item: unknown): Promise<T> => {
+      const plain = instanceToPlain(item as object);
+      const errors = await validate(item as object);
 
-    const results: T[] = [];
+      if (errors.length > 0) {
+        throw new Error(`Validation failed: ${JSON.stringify(errors)}`);
+      }
 
-    for (const item of source) {
-      results.push(await this.autoMapperInternal(item, Dto));
-    }
+      return plainToInstance(dto, plain, { excludeExtraneousValues: true });
+    };
 
-    return results;
-  }
-
-  private async autoMapperInternal<T>(
-    source: any | any[],
-    Dto: new () => T,
-  ): Promise<T> {
-    const plain = instanceToPlain(source);
-
-    const errors = await validate(source);
-
-    if (errors.length > 0) {
-      throw new Error(
-        `Auto mapper validation failed: ${JSON.stringify(errors)}`,
-      );
-    }
-
-    return plainToInstance(Dto, plain, {
-      excludeExtraneousValues: true,
-    });
+    return Array.isArray(source)
+      ? Promise.all(source.map(mapSingle))
+      : mapSingle(source);
   }
 }
