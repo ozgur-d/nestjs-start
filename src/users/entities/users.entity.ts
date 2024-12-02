@@ -21,7 +21,7 @@ export class Users {
   @Column()
   username: string;
 
-  @Column()
+  @Column({ type: 'varchar', length: 60, nullable: false })
   @Exclude()
   password: string;
 
@@ -30,9 +30,6 @@ export class Users {
 
   @CreateDateColumn()
   created_at: Date;
-
-  @Column()
-  salt: string;
 
   @UpdateDateColumn()
   updated_at: Date;

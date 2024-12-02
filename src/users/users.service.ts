@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { IsNull, Not, Repository } from 'typeorm';
@@ -11,6 +11,8 @@ import { Users } from './entities/users.entity';
 
 @Injectable()
 export class UsersService {
+  private readonly SALT_ROUNDS = 10; // Sabit bir değer olarak tanımlıyoruz
+
   constructor(
     @InjectRepository(Users)
     private readonly usersRepository: Repository<Users>,
@@ -29,14 +31,22 @@ export class UsersService {
     const user: Users = await this.usersRepository.findOne({
       where: { username: loginDto.username },
     });
+
     if (!user) {
       return null;
     }
-    const isPasswordValid: boolean = await bcrypt.compare(
-      loginDto.password,
-      user.password,
-    );
-    return isPasswordValid ? user : null;
+
+    try {
+      // bcrypt.compare fonksiyonu otomatik olarak hash'ten salt'ı çıkarır ve karşılaştırır
+      const isPasswordValid: boolean = await bcrypt.compare(
+        loginDto.password,
+        user.password,
+      );
+
+      return isPasswordValid ? user : null;
+    } catch (err) {
+      throw new BadRequestException('Şifre doğrulama işlemi başarısız');
+    }
   }
 
   async getPaginatedUsers(
@@ -58,17 +68,22 @@ export class UsersService {
   }
 
   async createUser(registerDto: RegisterDto): Promise<Users> {
-    const salt: string = await bcrypt.genSalt();
-    const hashedPassword: string = await bcrypt.hash(
-      registerDto.password,
-      salt,
-    );
-    const user: Users = this.usersRepository.create({
-      username: registerDto.username,
-      salt,
-      password: hashedPassword,
-    });
-    return await this.usersRepository.save(user);
+    try {
+      // bcrypt.hash fonksiyonu otomatik olarak salt üretir ve hash ile birleştirir
+      const hashedPassword: string = await bcrypt.hash(
+        registerDto.password,
+        this.SALT_ROUNDS,
+      );
+
+      const user: Users = this.usersRepository.create({
+        username: registerDto.username,
+        password: hashedPassword,
+      });
+
+      return await this.usersRepository.save(user);
+    } catch (err) {
+      throw new BadRequestException('Kullanıcı oluşturulurken bir hata oluştu');
+    }
   }
 
   // Example purpose - should be removed if not used
