@@ -21,14 +21,14 @@ export class UsersController {
   @Roles(Role.Admin, Role.User)
   @Get('me')
   async getProfile(@CurrentUser() user: Users): Promise<ResponseDto> {
-    const getUser = await this.usersService.findOne(user.username);
+    const getUser = await this.usersService.getUserByUsername(user.username);
     const result = await this.utilsService.mapToDto(getUser, MeResponseDto);
     return new ResponseDto(result);
   }
 
   @Get('all')
   async findAll(): Promise<ResponseDto> {
-    const result = await this.usersService.paginateAll();
+    const result = await this.usersService.getPaginatedUsers();
     return new ResponseDto(result);
   }
 }

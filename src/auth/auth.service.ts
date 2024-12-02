@@ -20,7 +20,7 @@ export class AuthService {
   ) {}
 
   async login(loginInfo: LoginDto): Promise<LoginResponseDto> {
-    const user = await this.usersService.checkAuth(loginInfo);
+    const user = await this.usersService.validateUserCredentials(loginInfo);
     if (!user) throw new UnauthorizedException('Invalid credentials');
     const payload = {
       id: user.id,
@@ -70,9 +70,11 @@ export class AuthService {
 
   async register(registerInfo: RegisterDto): Promise<LoginResponseDto> {
     //if user exist
-    const user = await this.usersService.findOne(registerInfo.username);
+    const user = await this.usersService.getUserByUsername(
+      registerInfo.username,
+    );
     if (user) throw new UnauthorizedException('Users already exist');
-    const createdUser = await this.usersService.create(registerInfo);
+    const createdUser = await this.usersService.createUser(registerInfo);
     const payload = {
       id: createdUser.id,
     };

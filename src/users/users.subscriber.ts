@@ -25,7 +25,7 @@ export class UsersSubscriber implements EntitySubscriberInterface<Users> {
 
   //example purpose
   async beforeInsert(event: InsertEvent<Users>): Promise<void> {
-    await this.userService.beforeUpdate();
+    await this.userService.executeBeforeUpdate();
     console.log(event.entity, 'beforeInsert');
   }
 }

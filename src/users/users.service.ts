@@ -12,54 +12,67 @@ import { Users } from './entities/users.entity';
 @Injectable()
 export class UsersService {
   constructor(
-    @InjectRepository(Users) private usersRepository: Repository<Users>,
+    @InjectRepository(Users)
+    private readonly usersRepository: Repository<Users>,
     @Inject(UtilsService)
     private readonly utilsService: UtilsService,
   ) {}
 
-  async findOne(username: string): Promise<Users> {
+  async getUserByUsername(username: string): Promise<Users> {
     return await this.usersRepository.findOne({
-      where: { username: username },
+      where: { username },
       relations: ['session_tokens'],
     });
   }
 
-  async checkAuth(loginInfos: LoginDto): Promise<Users> {
-    const user = await this.usersRepository.findOne({
-      where: { username: loginInfos.username },
+  async validateUserCredentials(loginDto: LoginDto): Promise<Users | null> {
+    const user: Users = await this.usersRepository.findOne({
+      where: { username: loginDto.username },
     });
-
-    if (user && (await bcrypt.compare(loginInfos.password, user.password))) {
-      return user;
+    if (!user) {
+      return null;
     }
-    return null;
+    const isPasswordValid: boolean = await bcrypt.compare(
+      loginDto.password,
+      user.password,
+    );
+    return isPasswordValid ? user : null;
   }
 
-  async paginateAll(): Promise<PaginatorResponse<MeResponseDto>> {
+  async getPaginatedUsers(
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<PaginatorResponse<MeResponseDto>> {
+    const queryOptions = {
+      page,
+      limit,
+      order: { created_at: 'DESC' as const },
+      where: { id: Not(IsNull()) },
+      relations: ['session_tokens'],
+    };
     return await this.utilsService.getPaginatedData(
       Users,
-      {
-        page: 1,
-        limit: 2,
-        order: { created_at: 'DESC' },
-        where: { id: Not(IsNull()) },
-        relations: ['session_tokens'],
-      },
+      queryOptions,
       MeResponseDto,
     );
   }
 
-  async create(registerInfo: RegisterDto): Promise<Users> {
-    const newUser = new Users();
-    newUser.username = registerInfo.username;
-    newUser.salt = await bcrypt.genSalt();
-    newUser.password = await bcrypt.hash(registerInfo.password, newUser.salt);
-
-    return await this.usersRepository.save(newUser);
+  async createUser(registerDto: RegisterDto): Promise<Users> {
+    const salt: string = await bcrypt.genSalt();
+    const hashedPassword: string = await bcrypt.hash(
+      registerDto.password,
+      salt,
+    );
+    const user: Users = this.usersRepository.create({
+      username: registerDto.username,
+      salt,
+      password: hashedPassword,
+    });
+    return await this.usersRepository.save(user);
   }
 
-  //example purpose
-  async beforeUpdate(): Promise<void> {
+  // Example purpose - should be removed if not used
+  async executeBeforeUpdate(): Promise<void> {
     console.log('user before update service');
   }
 }
