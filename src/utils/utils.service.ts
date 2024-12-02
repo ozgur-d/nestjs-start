@@ -3,7 +3,7 @@ import { InjectDataSource } from '@nestjs/typeorm';
 import { instanceToPlain, plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { DataSource, FindOptionsOrder, FindOptionsWhere } from 'typeorm';
-import { PaginatorResponse } from './dto/paginator-response.dto';
+import { PaginatorResponse } from './dto/paginator.response.dto';
 
 interface PaginationOptions<T> {
   page: number;
