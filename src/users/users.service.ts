@@ -40,7 +40,7 @@ export class UsersService {
       Users,
       { page: 1, limit: 2 },
       {
-        order: { 'users.created_at': 'DESC' },
+        order: { created_at: 'DESC' },
         where: { id: MoreThan(0) },
         relations: ['session_tokens'],
       },
