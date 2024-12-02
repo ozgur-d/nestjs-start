@@ -80,19 +80,19 @@ export class AuthService {
     const response = new LoginResponseDto();
     response.access_token = this.jwtService.sign(payload);
     response.refresh_token = await this.generateRefreshToken();
-    const expiresAt = parseInt(process.env.JWT_EXPIRES_IN || '3600', 10);
 
+    const expiresAtMinutes = parseInt(process.env.JWT_EXPIRES_IN || '60', 10);
     const expiresAtDate = DateTime.now()
-      .plus({ seconds: expiresAt })
+      .plus({ minutes: expiresAtMinutes })
       .toJSDate();
     response.expires_at = expiresAtDate;
 
-    const expiresRefreshAt = parseInt(
-      process.env.JWT_REFRESH_EXPIRES_IN || '86400',
+    const expiresRefreshAtMinutes = parseInt(
+      process.env.JWT_REFRESH_EXPIRES_IN || '43200',
       10,
     );
     const expiresRefreshAtDate = DateTime.now()
-      .plus({ seconds: expiresRefreshAt })
+      .plus({ minutes: expiresRefreshAtMinutes })
       .toJSDate();
     response.expires_refresh_at = expiresRefreshAtDate;
 
