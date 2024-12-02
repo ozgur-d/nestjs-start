@@ -1,8 +1,8 @@
 export interface PaginatorResponse<T> {
   nodes: T[];
-  currentPage: number;
-  pageSize: number;
-  hasNext: boolean;
-  totalPages: number;
-  totalCount: number;
+  current_page: number;
+  page_size: number;
+  has_next: boolean;
+  total_pages: number;
+  total_count: number;
 }

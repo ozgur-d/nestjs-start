@@ -49,11 +49,11 @@ export class UtilsService {
 
     return {
       nodes,
-      currentPage: page,
-      pageSize,
-      hasNext: total > page * limit,
-      totalPages: Math.ceil(total / limit),
-      totalCount: total,
+      current_page: page,
+      page_size: pageSize,
+      has_next: total > page * limit,
+      total_pages: Math.ceil(total / limit),
+      total_count: total,
     };
   }
 

@@ -20,8 +20,9 @@ Generate code, corrections, and refactorings that comply with the basic principl
 
 ### Nomenclature
 
-- Use snake_case for variables.
+- Use snake_case for variables in DTOs, responses, and entities.
 - Use PascalCase for classes.
+- Use camelCase for variables inside function bodies.
 - Use camelCase for functions, and methods.
 - Use kebab-case for file names, directory names, controller route names, and URL endpoints.
 - Use UPPERCASE for environment variables.
