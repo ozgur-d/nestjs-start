@@ -5,5 +5,5 @@ export class GetAccessTokenDto {
   @ApiProperty()
   @IsNotEmpty({ message: 'Refresh token boş olamaz' })
   @IsString({ message: 'Refresh token string olmalıdır' })
-  refreshToken: string;
+  refresh_token: string;
 }

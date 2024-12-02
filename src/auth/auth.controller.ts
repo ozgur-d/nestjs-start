@@ -14,31 +14,36 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('login')
-  async login(@Body() loginInfo: LoginDto): Promise<ResponseDto> {
+  async executeLogin(@Body() loginInfo: LoginDto): Promise<ResponseDto> {
     const response = await this.authService.login(loginInfo);
     return new ResponseDto(response);
   }
 
   @Post('register')
-  async register(@Body() registerInfo: RegisterDto): Promise<ResponseDto> {
+  async executeRegister(
+    @Body() registerInfo: RegisterDto,
+  ): Promise<ResponseDto> {
     const response = await this.authService.register(registerInfo);
     return new ResponseDto(response);
   }
 
   @Roles(Role.User, Role.Admin)
   @Get('logout')
-  async logout(@Req() req): Promise<ResponseDto> {
-    let accessToken = req.headers.authorization ?? req.query['access-token'];
-    //remove bearer from token
-    accessToken = accessToken.replace('Bearer ', '');
+  async executeLogout(@Req() req): Promise<ResponseDto> {
+    const accessToken = this.extractAccessToken(req);
     await this.authService.logout(accessToken);
     return new ResponseDto(null);
   }
 
-  //get access token
-  @Get('getAccessToken')
+  @Get('get-access-token')
   async getAccessToken(@Query() dto: GetAccessTokenDto): Promise<ResponseDto> {
-    const response = await this.authService.getAccessToken(dto.refreshToken);
+    const response = await this.authService.getAccessToken(dto.refresh_token);
     return new ResponseDto(response, 'Access token retrieved');
+  }
+
+  private extractAccessToken(req): string {
+    const authorizationHeader =
+      req.headers.authorization ?? req.query['access-token'];
+    return authorizationHeader.replace('Bearer ', '');
   }
 }
