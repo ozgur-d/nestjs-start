@@ -7,11 +7,11 @@ const envFile = process.env.NODE_ENV
   ? `./.env.${process.env.NODE_ENV}`
   : './.env';
 /**************************************************/
-// Mevcut process.env değerlerini korumak için yardımcı fonksiyon
+// Helper function to preserve existing process.env values
 const loadEnvFile = (envPath: string): void => {
   try {
     const envConfig = dotenv.parse(fs.readFileSync(envPath));
-    // Sadece process.env'de olmayan değerleri ekle
+    // Only add values that don't exist in process.env
     for (const key in envConfig) {
       if (!process.env[key]) {
         process.env[key] = envConfig[key];

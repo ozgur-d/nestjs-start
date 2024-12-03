@@ -40,7 +40,7 @@ export class AuthService {
     let originalIpAddress: string | null = null;
     let isProxy = false;
 
-    // Cloudflare header kontrolü (en yüksek öncelik)
+    // Cloudflare header check (highest priority)
     const cfConnectingIp = request.headers['cf-connecting-ip'];
     if (typeof cfConnectingIp === 'string') {
       originalIpAddress = ipAddress;
@@ -48,7 +48,7 @@ export class AuthService {
       isProxy = true;
     }
 
-    // Nginx X-Real-IP header kontrolü (ikincil öncelik)
+    // Nginx X-Real-IP header check (secondary priority)
     const realIp = request.headers['x-real-ip'];
     if (typeof realIp === 'string' && !cfConnectingIp) {
       originalIpAddress = ipAddress;
@@ -56,11 +56,11 @@ export class AuthService {
       isProxy = true;
     }
 
-    // X-Forwarded-For header kontrolü (en düşük öncelik)
+    // X-Forwarded-For header check (lowest priority)
     const forwardedFor = request.headers['x-forwarded-for'];
     if (typeof forwardedFor === 'string' && !cfConnectingIp && !realIp) {
       const ips = forwardedFor.split(',').map((ip) => ip.trim());
-      // İlk IP adresi gerçek istemci IP'sidir
+      // First IP address is the real client IP
       originalIpAddress = ipAddress;
       ipAddress = ips[0];
       isProxy = true;
@@ -81,12 +81,12 @@ export class AuthService {
   ): Promise<LoginResponseDto> {
     const user = await this.usersService.validateUserCredentials(loginInfo);
     if (!user) {
-      throw new UnauthorizedException('Geçersiz kullanıcı bilgileri');
+      throw new UnauthorizedException('Invalid user credentials');
     }
     try {
       return await this.createTokens(user, reply, request);
     } catch (error) {
-      throw new UnauthorizedException('Token oluşturma hatası');
+      throw new UnauthorizedException('Token generation error');
     }
   }
 
@@ -110,13 +110,13 @@ export class AuthService {
 
     if (!sessionToken) {
       this.clearRefreshTokenCookie(reply);
-      throw new UnauthorizedException('Geçersiz refresh token');
+      throw new UnauthorizedException('Invalid refresh token');
     }
 
     try {
       return await this.createTokens(sessionToken.user, reply, request);
     } catch (error) {
-      throw new UnauthorizedException('Token yenileme işlemi başarısız');
+      throw new UnauthorizedException('Token refresh failed');
     }
   }
 
@@ -129,13 +129,13 @@ export class AuthService {
       registerInfo.username,
     );
     if (existingUser) {
-      throw new UnauthorizedException('Bu kullanıcı adı zaten kullanımda');
+      throw new UnauthorizedException('This username is already in use');
     }
     const createdUser = await this.usersService.createUser(registerInfo);
     try {
       return await this.createTokens(createdUser, reply, request);
     } catch (error) {
-      throw new UnauthorizedException('Token oluşturma hatası');
+      throw new UnauthorizedException('Token generation error');
     }
   }
 
@@ -247,7 +247,7 @@ export class AuthService {
       const payload = this.jwtService.verify<JwtPayload>(accessToken);
 
       if (payload.type !== 'access') {
-        throw new UnauthorizedException('Geçersiz token tipi');
+        throw new UnauthorizedException('Invalid token type');
       }
 
       const token = await this.sessionTokenRepository.findOne({
@@ -259,12 +259,12 @@ export class AuthService {
       });
 
       if (!token || token.user.id !== payload.sub) {
-        throw new UnauthorizedException('Geçersiz veya süresi dolmuş token');
+        throw new UnauthorizedException('Invalid or expired token');
       }
 
       return token.user;
     } catch (error) {
-      throw new UnauthorizedException('Token doğrulama hatası');
+      throw new UnauthorizedException('Token verification error');
     }
   }
 }

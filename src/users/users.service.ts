@@ -11,7 +11,7 @@ import { Users } from './entities/users.entity';
 
 @Injectable()
 export class UsersService {
-  private readonly SALT_ROUNDS = 10; // Sabit bir değer olarak tanımlıyoruz
+  private readonly SALT_ROUNDS = 10; // Defined as a constant value
 
   constructor(
     @InjectRepository(Users)
@@ -37,7 +37,7 @@ export class UsersService {
     }
 
     try {
-      // bcrypt.compare fonksiyonu otomatik olarak hash'ten salt'ı çıkarır ve karşılaştırır
+      // bcrypt.compare function automatically extracts salt from hash and compares
       const isPasswordValid: boolean = await bcrypt.compare(
         loginDto.password,
         user.password,
@@ -45,7 +45,7 @@ export class UsersService {
 
       return isPasswordValid ? user : null;
     } catch (err) {
-      throw new BadRequestException('Şifre doğrulama işlemi başarısız');
+      throw new BadRequestException('Password verification failed');
     }
   }
 
@@ -69,7 +69,7 @@ export class UsersService {
 
   async createUser(registerDto: RegisterDto): Promise<Users> {
     try {
-      // bcrypt.hash fonksiyonu otomatik olarak salt üretir ve hash ile birleştirir
+      // bcrypt.hash function automatically generates salt and combines it with hash
       const hashedPassword: string = await bcrypt.hash(
         registerDto.password,
         this.SALT_ROUNDS,
@@ -82,7 +82,9 @@ export class UsersService {
 
       return await this.usersRepository.save(user);
     } catch (err) {
-      throw new BadRequestException('Kullanıcı oluşturulurken bir hata oluştu');
+      throw new BadRequestException(
+        'An error occurred while creating the user',
+      );
     }
   }
 

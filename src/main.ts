@@ -25,10 +25,10 @@ async function bootstrap(): Promise<void> {
     }),
   );
 
-  // Cookie desteği ekle
+  // Add cookie support
   await app.register(fastifyCookie, {
-    secret: process.env.COOKIE_SECRET || 'my-secret-548932857', // Cookie imzalama için secret
-    hook: 'onRequest', // Her request'te çalışacak
+    secret: process.env.COOKIE_SECRET || 'my-secret-548932857', // Secret for cookie signing
+    hook: 'onRequest', // Runs on every request
   });
 
   //swagger config

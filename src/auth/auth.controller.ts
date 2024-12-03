@@ -44,7 +44,7 @@ export class AuthController {
   ): Promise<LoginResponseDto> {
     const refreshToken = request.cookies['refresh_token'];
     if (!refreshToken) {
-      throw new UnauthorizedException('Refresh token bulunamadı');
+      throw new UnauthorizedException('Refresh token not found');
     }
     return this.authService.refreshAccessToken(refreshToken, reply, request);
   }

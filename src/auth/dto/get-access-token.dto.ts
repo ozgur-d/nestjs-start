@@ -3,7 +3,7 @@ import { IsNotEmpty, IsString } from 'class-validator';
 
 export class GetAccessTokenDto {
   @ApiProperty()
-  @IsNotEmpty({ message: 'Refresh token boş olamaz' })
-  @IsString({ message: 'Refresh token string olmalıdır' })
+  @IsNotEmpty({ message: 'Refresh token cannot be empty' })
+  @IsString({ message: 'Refresh token must be a string' })
   refresh_token: string;
 }
