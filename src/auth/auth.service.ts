@@ -63,11 +63,19 @@ export class AuthService {
       throw new UnauthorizedException('Geçersiz refresh token');
     }
 
-    // Refresh token rotasyonu - mevcut token'ı geçersiz kıl
-    await this.invalidateToken(sessionToken.access_token);
+    try {
+      // Önce yeni token'ları oluştur
+      const newTokens = await this.createTokens(sessionToken.user, reply);
 
-    // Yeni token'lar oluştur
-    return this.createTokens(sessionToken.user, reply);
+      // Başarılı olursa eski token'ı geçersiz kıl
+      sessionToken.expires_refresh_at = DateTime.now().toJSDate();
+      sessionToken.expires_at = DateTime.now().toJSDate();
+      await this.sessionTokenRepository.save(sessionToken);
+
+      return newTokens;
+    } catch (error) {
+      throw new UnauthorizedException('Token yenileme işlemi başarısız');
+    }
   }
 
   async register(
@@ -88,44 +96,61 @@ export class AuthService {
     user: Users,
     reply: FastifyReply,
   ): Promise<LoginResponseDto> {
-    const payload: JwtPayload = {
-      sub: user.id,
-      username: user.username,
-      roles: [user.role],
-      type: 'access',
-    };
+    // Transaction başlat
+    const queryRunner =
+      this.sessionTokenRepository.manager.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    const response = new LoginResponseDto();
-    // Access Token oluştur
-    response.access_token = this.jwtService.sign(payload, {
-      expiresIn: `${this.ACCESS_TOKEN_EXPIRATION}m`,
-    });
+    try {
+      const payload: JwtPayload = {
+        sub: user.id,
+        username: user.username,
+        roles: [user.role],
+        type: 'access',
+      };
 
-    // Refresh Token oluştur
-    const refreshToken = await this.generateRefreshToken();
+      const response = new LoginResponseDto();
+      response.access_token = this.jwtService.sign(payload, {
+        expiresIn: `${this.ACCESS_TOKEN_EXPIRATION}m`,
+      });
 
-    // Süreleri hesapla
-    response.expires_at = DateTime.now()
-      .plus({ minutes: this.ACCESS_TOKEN_EXPIRATION })
-      .toJSDate();
+      // Refresh Token oluştur
+      const refreshToken = await this.generateRefreshToken();
 
-    const refreshTokenExpiration = DateTime.now()
-      .plus({ minutes: this.REFRESH_TOKEN_EXPIRATION })
-      .toJSDate();
+      // Süreleri hesapla
+      response.expires_at = DateTime.now()
+        .plus({ minutes: this.ACCESS_TOKEN_EXPIRATION })
+        .toJSDate();
 
-    // Session'ı kaydet
-    const sessionToken = new SessionToken();
-    sessionToken.user = user;
-    sessionToken.access_token = response.access_token;
-    sessionToken.refresh_token = refreshToken;
-    sessionToken.expires_at = response.expires_at;
-    sessionToken.expires_refresh_at = refreshTokenExpiration;
-    await this.sessionTokenRepository.save(sessionToken);
+      const refreshTokenExpiration = DateTime.now()
+        .plus({ minutes: this.REFRESH_TOKEN_EXPIRATION })
+        .toJSDate();
 
-    // Refresh token'ı cookie olarak ayarla
-    this.setRefreshTokenCookie(reply, refreshToken, refreshTokenExpiration);
+      // Session'ı kaydet
+      const sessionToken = new SessionToken();
+      sessionToken.user = user;
+      sessionToken.access_token = response.access_token;
+      sessionToken.refresh_token = refreshToken;
+      sessionToken.expires_at = response.expires_at;
+      sessionToken.expires_refresh_at = refreshTokenExpiration;
 
-    return response;
+      // Transaction içinde kaydet
+      await queryRunner.manager.save(SessionToken, sessionToken);
+      await queryRunner.commitTransaction();
+
+      // Cookie ayarla
+      this.setRefreshTokenCookie(reply, refreshToken, refreshTokenExpiration);
+
+      return response;
+    } catch (error) {
+      // Hata durumunda rollback
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      // Her durumda bağlantıyı serbest bırak
+      await queryRunner.release();
+    }
   }
 
   private setRefreshTokenCookie(
@@ -150,7 +175,13 @@ export class AuthService {
   }
 
   private async generateRefreshToken(): Promise<string> {
-    return crypto.randomBytes(40).toString('base64url');
+    const uuid = crypto.randomUUID();
+    const uuidBuffer = Buffer.from(uuid);
+    const randomBytes = crypto.randomBytes(12);
+    const combined = Buffer.concat([uuidBuffer, randomBytes]);
+    const token = combined.toString('base64url');
+
+    return token;
   }
 
   private async invalidateToken(accessToken: string): Promise<void> {
