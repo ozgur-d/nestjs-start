@@ -52,7 +52,7 @@ export class AuthController {
   }
 
   @ApiCookieAuth()
-  @Get('refresh-token')
+  @Post('refresh-token')
   async refreshAccessToken(
     @Req() req: FastifyRequest,
     @Res({ passthrough: true }) reply: FastifyReply,

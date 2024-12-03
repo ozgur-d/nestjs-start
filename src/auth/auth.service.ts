@@ -38,7 +38,11 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('Geçersiz kullanıcı bilgileri');
     }
-    return this.createTokens(user, reply);
+    try {
+      return await this.createTokens(user, reply);
+    } catch (error) {
+      throw new UnauthorizedException('Token oluşturma hatası');
+    }
   }
 
   async logout(accessToken: string, reply: FastifyReply): Promise<void> {
@@ -89,7 +93,11 @@ export class AuthService {
       throw new UnauthorizedException('Bu kullanıcı adı zaten kullanımda');
     }
     const createdUser = await this.usersService.createUser(registerInfo);
-    return this.createTokens(createdUser, reply);
+    try {
+      return await this.createTokens(createdUser, reply);
+    } catch (error) {
+      throw new UnauthorizedException('Token oluşturma hatası');
+    }
   }
 
   private async createTokens(
