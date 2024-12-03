@@ -40,7 +40,7 @@ export class AuthService {
     let originalIpAddress: string | null = null;
     let isProxy = false;
 
-    // Cloudflare header kontrolü
+    // Cloudflare header kontrolü (en yüksek öncelik)
     const cfConnectingIp = request.headers['cf-connecting-ip'];
     if (typeof cfConnectingIp === 'string') {
       originalIpAddress = ipAddress;
@@ -48,20 +48,21 @@ export class AuthService {
       isProxy = true;
     }
 
-    // X-Forwarded-For header kontrolü
-    const forwardedFor = request.headers['x-forwarded-for'];
-    if (typeof forwardedFor === 'string' && !cfConnectingIp) {
-      const ips = forwardedFor.split(',').map((ip) => ip.trim());
+    // Nginx X-Real-IP header kontrolü (ikincil öncelik)
+    const realIp = request.headers['x-real-ip'];
+    if (typeof realIp === 'string' && !cfConnectingIp) {
       originalIpAddress = ipAddress;
-      ipAddress = ips[0];
+      ipAddress = realIp;
       isProxy = true;
     }
 
-    // X-Real-IP header kontrolü
-    const realIp = request.headers['x-real-ip'];
-    if (typeof realIp === 'string' && !cfConnectingIp && !forwardedFor) {
+    // X-Forwarded-For header kontrolü (en düşük öncelik)
+    const forwardedFor = request.headers['x-forwarded-for'];
+    if (typeof forwardedFor === 'string' && !cfConnectingIp && !realIp) {
+      const ips = forwardedFor.split(',').map((ip) => ip.trim());
+      // İlk IP adresi gerçek istemci IP'sidir
       originalIpAddress = ipAddress;
-      ipAddress = realIp;
+      ipAddress = ips[0];
       isProxy = true;
     }
 
