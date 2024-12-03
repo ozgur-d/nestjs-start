@@ -1,3 +1,4 @@
+import fastifyCookie from '@fastify/cookie';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import {
@@ -24,6 +25,12 @@ async function bootstrap(): Promise<void> {
     }),
   );
 
+  // Cookie desteği ekle
+  await app.register(fastifyCookie, {
+    secret: process.env.COOKIE_SECRET || 'my-secret-548932857', // Cookie imzalama için secret
+    hook: 'onRequest', // Her request'te çalışacak
+  });
+
   //swagger config
   const config = new DocumentBuilder()
     .addBearerAuth({
@@ -32,6 +39,7 @@ async function bootstrap(): Promise<void> {
       bearerFormat: 'JWT',
       in: 'header',
     })
+    .addCookieAuth('refresh_token')
     .setTitle('API DOCUMENT')
     .setDescription('API DOCUMENT')
     .setVersion('1.0')
