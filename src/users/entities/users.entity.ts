@@ -8,7 +8,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { SessionToken } from '../../auth/entities/session-token.entity';
+import { SessionTokens } from '../../auth/entities/session-tokens.entity';
 import { Role } from '../../common/enums/role.enum';
 
 @Entity()
@@ -35,10 +35,10 @@ export class Users {
   updated_at: Date;
 
   //one to many session
-  @OneToMany(() => SessionToken, (sessionToken) => sessionToken.user, {
+  @OneToMany(() => SessionTokens, (sessionToken) => sessionToken.user, {
     cascade: true,
   })
-  session_tokens: SessionToken[];
+  session_tokens: SessionTokens[];
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   toJSON() {

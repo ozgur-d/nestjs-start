@@ -5,7 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { SessionToken } from './entities/session-token.entity';
+import { SessionTokens } from './entities/session-tokens.entity';
 import { JwtStrategy } from './strategies/jwt.strategy';
 
 @Module({
@@ -18,7 +18,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
         expiresIn: `${process.env.JWT_EXPIRES_IN || '60'}m`,
       },
     }),
-    TypeOrmModule.forFeature([SessionToken]),
+    TypeOrmModule.forFeature([SessionTokens]),
   ],
   providers: [AuthService, JwtStrategy],
   exports: [AuthService],

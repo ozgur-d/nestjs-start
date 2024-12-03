@@ -2,7 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as crypto from 'crypto';
-import { FastifyReply } from 'fastify';
+import { FastifyReply, FastifyRequest } from 'fastify';
 import { DateTime } from 'luxon';
 import { MoreThan, Repository } from 'typeorm';
 import { Users } from '../users/entities/users.entity';
@@ -10,7 +10,7 @@ import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
 import { LoginResponseDto } from './dto/login.response.dto';
 import { RegisterDto } from './dto/register.dto';
-import { SessionToken } from './entities/session-token.entity';
+import { SessionTokens } from './entities/session-tokens.entity';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 
 @Injectable()
@@ -26,20 +26,64 @@ export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
-    @InjectRepository(SessionToken)
-    private readonly sessionTokenRepository: Repository<SessionToken>,
+    @InjectRepository(SessionTokens)
+    private readonly sessionTokenRepository: Repository<SessionTokens>,
   ) {}
+
+  private getClientInfo(request: FastifyRequest): {
+    ipAddress: string;
+    originalIpAddress: string | null;
+    userAgent: string;
+    isProxy: boolean;
+  } {
+    let ipAddress = request.ip;
+    let originalIpAddress: string | null = null;
+    let isProxy = false;
+
+    // Cloudflare header kontrolü
+    const cfConnectingIp = request.headers['cf-connecting-ip'];
+    if (typeof cfConnectingIp === 'string') {
+      originalIpAddress = ipAddress;
+      ipAddress = cfConnectingIp;
+      isProxy = true;
+    }
+
+    // X-Forwarded-For header kontrolü
+    const forwardedFor = request.headers['x-forwarded-for'];
+    if (typeof forwardedFor === 'string' && !cfConnectingIp) {
+      const ips = forwardedFor.split(',').map((ip) => ip.trim());
+      originalIpAddress = ipAddress;
+      ipAddress = ips[0];
+      isProxy = true;
+    }
+
+    // X-Real-IP header kontrolü
+    const realIp = request.headers['x-real-ip'];
+    if (typeof realIp === 'string' && !cfConnectingIp && !forwardedFor) {
+      originalIpAddress = ipAddress;
+      ipAddress = realIp;
+      isProxy = true;
+    }
+
+    return {
+      ipAddress,
+      originalIpAddress,
+      userAgent: request.headers['user-agent'] || 'Unknown',
+      isProxy,
+    };
+  }
 
   async login(
     loginInfo: LoginDto,
     reply: FastifyReply,
+    request: FastifyRequest,
   ): Promise<LoginResponseDto> {
     const user = await this.usersService.validateUserCredentials(loginInfo);
     if (!user) {
       throw new UnauthorizedException('Geçersiz kullanıcı bilgileri');
     }
     try {
-      return await this.createTokens(user, reply);
+      return await this.createTokens(user, reply, request);
     } catch (error) {
       throw new UnauthorizedException('Token oluşturma hatası');
     }
@@ -53,6 +97,7 @@ export class AuthService {
   async refreshAccessToken(
     refreshToken: string,
     reply: FastifyReply,
+    request: FastifyRequest,
   ): Promise<LoginResponseDto> {
     const sessionToken = await this.sessionTokenRepository.findOne({
       where: {
@@ -68,15 +113,7 @@ export class AuthService {
     }
 
     try {
-      // Önce yeni token'ları oluştur
-      const newTokens = await this.createTokens(sessionToken.user, reply);
-
-      // Başarılı olursa eski token'ı geçersiz kıl
-      sessionToken.expires_refresh_at = DateTime.now().toJSDate();
-      sessionToken.expires_at = DateTime.now().toJSDate();
-      await this.sessionTokenRepository.save(sessionToken);
-
-      return newTokens;
+      return await this.createTokens(sessionToken.user, reply, request);
     } catch (error) {
       throw new UnauthorizedException('Token yenileme işlemi başarısız');
     }
@@ -85,6 +122,7 @@ export class AuthService {
   async register(
     registerInfo: RegisterDto,
     reply: FastifyReply,
+    request: FastifyRequest,
   ): Promise<LoginResponseDto> {
     const existingUser = await this.usersService.getUserByUsername(
       registerInfo.username,
@@ -94,7 +132,7 @@ export class AuthService {
     }
     const createdUser = await this.usersService.createUser(registerInfo);
     try {
-      return await this.createTokens(createdUser, reply);
+      return await this.createTokens(createdUser, reply, request);
     } catch (error) {
       throw new UnauthorizedException('Token oluşturma hatası');
     }
@@ -103,8 +141,8 @@ export class AuthService {
   private async createTokens(
     user: Users,
     reply: FastifyReply,
+    request: FastifyRequest,
   ): Promise<LoginResponseDto> {
-    // Transaction başlat
     const queryRunner =
       this.sessionTokenRepository.manager.connection.createQueryRunner();
     await queryRunner.connect();
@@ -123,10 +161,10 @@ export class AuthService {
         expiresIn: `${this.ACCESS_TOKEN_EXPIRATION}m`,
       });
 
-      // Refresh Token oluştur
+      const clientInfo = this.getClientInfo(request);
+
       const refreshToken = await this.generateRefreshToken();
 
-      // Süreleri hesapla
       response.expires_at = DateTime.now()
         .plus({ minutes: this.ACCESS_TOKEN_EXPIRATION })
         .toJSDate();
@@ -135,28 +173,27 @@ export class AuthService {
         .plus({ minutes: this.REFRESH_TOKEN_EXPIRATION })
         .toJSDate();
 
-      // Session'ı kaydet
-      const sessionToken = new SessionToken();
+      const sessionToken = new SessionTokens();
       sessionToken.user = user;
       sessionToken.access_token = response.access_token;
       sessionToken.refresh_token = refreshToken;
       sessionToken.expires_at = response.expires_at;
       sessionToken.expires_refresh_at = refreshTokenExpiration;
+      sessionToken.ip_address = clientInfo.ipAddress;
+      sessionToken.original_ip_address = clientInfo.originalIpAddress;
+      sessionToken.user_agent = clientInfo.userAgent;
+      sessionToken.is_proxy = clientInfo.isProxy;
 
-      // Transaction içinde kaydet
-      await queryRunner.manager.save(SessionToken, sessionToken);
+      await queryRunner.manager.save(SessionTokens, sessionToken);
       await queryRunner.commitTransaction();
 
-      // Cookie ayarla
       this.setRefreshTokenCookie(reply, refreshToken, refreshTokenExpiration);
 
       return response;
     } catch (error) {
-      // Hata durumunda rollback
       await queryRunner.rollbackTransaction();
       throw error;
     } finally {
-      // Her durumda bağlantıyı serbest bırak
       await queryRunner.release();
     }
   }
@@ -198,7 +235,6 @@ export class AuthService {
     });
 
     if (sessionToken) {
-      // Token'ları hemen geçersiz kıl
       sessionToken.expires_at = DateTime.now().toJSDate();
       sessionToken.expires_refresh_at = DateTime.now().toJSDate();
       await this.sessionTokenRepository.save(sessionToken);

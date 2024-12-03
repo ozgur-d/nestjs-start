@@ -9,8 +9,8 @@ import {
 } from 'typeorm';
 import { Users } from '../../users/entities/users.entity';
 
-@Entity()
-export class SessionToken {
+@Entity('session_tokens')
+export class SessionTokens {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -38,4 +38,16 @@ export class SessionToken {
     onDelete: 'CASCADE',
   })
   user: Users;
+
+  @Column({ name: 'ip_address', length: 45, nullable: true })
+  ip_address: string;
+
+  @Column({ name: 'user_agent', length: 500, nullable: true })
+  user_agent: string;
+
+  @Column({ name: 'is_proxy', default: false })
+  is_proxy: boolean;
+
+  @Column({ name: 'original_ip_address', length: 45, nullable: true })
+  original_ip_address: string;
 }

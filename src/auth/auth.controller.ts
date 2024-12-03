@@ -1,20 +1,17 @@
 import {
   Body,
   Controller,
-  Get,
   Post,
   Req,
   Res,
   UnauthorizedException,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiCookieAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { FastifyReply, FastifyRequest } from 'fastify';
-import { ResponseDto } from '../common/dto/response.dto';
-import { Role } from '../common/enums/role.enum';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { LoginResponseDto } from './dto/login.response.dto';
 import { RegisterDto } from './dto/register.dto';
-import { Roles } from './lib/roles.decorator';
 
 @Controller('auth')
 @ApiTags('Authentication')
@@ -23,62 +20,32 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('login')
-  async executeLogin(
-    @Body() loginInfo: LoginDto,
+  async login(
+    @Body() loginDto: LoginDto,
     @Res({ passthrough: true }) reply: FastifyReply,
-  ): Promise<ResponseDto> {
-    const response = await this.authService.login(loginInfo, reply);
-    return new ResponseDto(response);
+    @Req() request: FastifyRequest,
+  ): Promise<LoginResponseDto> {
+    return this.authService.login(loginDto, reply, request);
   }
 
   @Post('register')
-  async executeRegister(
-    @Body() registerInfo: RegisterDto,
+  async register(
+    @Body() registerDto: RegisterDto,
     @Res({ passthrough: true }) reply: FastifyReply,
-  ): Promise<ResponseDto> {
-    const response = await this.authService.register(registerInfo, reply);
-    return new ResponseDto(response);
+    @Req() request: FastifyRequest,
+  ): Promise<LoginResponseDto> {
+    return this.authService.register(registerDto, reply, request);
   }
 
-  @Roles(Role.User, Role.Admin)
-  @Get('logout')
-  async executeLogout(
-    @Req() req: FastifyRequest,
-    @Res({ passthrough: true }) reply: FastifyReply,
-  ): Promise<ResponseDto> {
-    const accessToken = this.extractAccessToken(req);
-    await this.authService.logout(accessToken, reply);
-    return new ResponseDto(null);
-  }
-
-  @ApiCookieAuth()
   @Post('refresh-token')
-  async refreshAccessToken(
-    @Req() req: FastifyRequest,
+  async refreshToken(
+    @Req() request: FastifyRequest,
     @Res({ passthrough: true }) reply: FastifyReply,
-  ): Promise<ResponseDto> {
-    const signedCookie = req.cookies[this.authService['COOKIE_NAME']];
-    if (!signedCookie) {
+  ): Promise<LoginResponseDto> {
+    const refreshToken = request.cookies['refresh_token'];
+    if (!refreshToken) {
       throw new UnauthorizedException('Refresh token bulunamadı');
     }
-
-    // İmzalı cookie'yi doğrula
-    const unsignResult = req.unsignCookie(signedCookie);
-    if (!unsignResult?.valid) {
-      this.authService['clearRefreshTokenCookie'](reply);
-      throw new UnauthorizedException('Geçersiz refresh token imzası');
-    }
-
-    const response = await this.authService.refreshAccessToken(
-      unsignResult.value, // Doğrulanmış orijinal değeri kullan
-      reply,
-    );
-    return new ResponseDto(response, 'Access token yenilendi');
-  }
-
-  private extractAccessToken(req: FastifyRequest): string {
-    const authorizationHeader =
-      req.headers.authorization ?? req.query['access-token'];
-    return authorizationHeader.replace('Bearer ', '');
+    return this.authService.refreshAccessToken(refreshToken, reply, request);
   }
 }
