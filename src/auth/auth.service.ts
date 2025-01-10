@@ -221,7 +221,7 @@ export class AuthService {
 
   private clearRefreshTokenCookie(reply: FastifyReply): void {
     reply.clearCookie(this.COOKIE_NAME, {
-      path: '/api/auth/refresh-token',
+      path: '/api/auth',
     });
   }
 
