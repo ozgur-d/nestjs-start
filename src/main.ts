@@ -51,8 +51,17 @@ async function bootstrap(): Promise<void> {
     },
   });
 
+  const isProd = process.env.NODE_ENV === 'production';
+
+  const allowedOrigins = isProd
+    ? [process.env.SITE_URL]
+    : [process.env.SITE_URL, 'http://localhost:3000'];
+
   //allow any cors
-  app.enableCors();
+  app.enableCors({
+    origin: allowedOrigins,
+    credentials: true,
+  });
 
   await app.listen(5656);
 }

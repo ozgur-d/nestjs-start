@@ -211,8 +211,8 @@ export class AuthService {
   ): void {
     reply.setCookie(this.COOKIE_NAME, token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: true,
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'none',
       expires: expiresAt,
       path: '/api/auth',
       signed: true,
