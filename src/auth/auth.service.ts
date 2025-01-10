@@ -100,6 +100,11 @@ export class AuthService {
     reply: FastifyReply,
     request: FastifyRequest,
   ): Promise<LoginResponseDto> {
+    const unsignedToken = request.unsignCookie(refreshToken);
+    if (!unsignedToken.valid) {
+      this.clearRefreshTokenCookie(reply);
+      throw new UnauthorizedException('Invalid cookie signature');
+    }
     const sessionToken = await this.sessionTokenRepository.findOne({
       where: {
         refresh_token: refreshToken.trim(),
@@ -209,7 +214,7 @@ export class AuthService {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       expires: expiresAt,
-      path: '/api/auth/refresh-token',
+      path: '/api/auth',
       signed: true,
     });
   }
