@@ -97,16 +97,18 @@ export class AuthService {
 
   async refreshAccessToken(
     refreshToken: string,
+    accessToken: string,
     reply: FastifyReply,
     request: FastifyRequest,
   ): Promise<LoginResponseDto> {
-    const unsignedToken = request.unsignCookie(refreshToken);
+    /* const unsignedToken = request.unsignCookie(refreshToken);
     if (!unsignedToken.valid) {
       this.clearRefreshTokenCookie(reply);
       throw new UnauthorizedException('Invalid cookie signature');
-    }
+    } */
     const sessionToken = await this.sessionTokenRepository.findOne({
       where: {
+        access_token: accessToken,
         refresh_token: refreshToken.trim(),
         expires_refresh_at: MoreThan(DateTime.now().toJSDate()),
       },
@@ -215,7 +217,7 @@ export class AuthService {
       sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'none',
       expires: expiresAt,
       path: '/api/auth',
-      signed: true,
+      signed: false,
     });
   }
 

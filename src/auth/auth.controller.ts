@@ -42,10 +42,26 @@ export class AuthController {
     @Req() request: FastifyRequest,
     @Res({ passthrough: true }) reply: FastifyReply,
   ): Promise<LoginResponseDto> {
-    const refreshToken = request.cookies['refresh_token'];
+    let refreshToken = request.cookies['refresh_token'];
+
+    if (!refreshToken) {
+      refreshToken = request.headers['refresh-token'] as string;
+    }
+
     if (!refreshToken) {
       throw new UnauthorizedException('Refresh token not found');
     }
-    return this.authService.refreshAccessToken(refreshToken, reply, request);
+
+    const accessToken = request.headers['authorization']?.split(' ')[1];
+    if (!accessToken) {
+      throw new UnauthorizedException('Access token not found');
+    }
+
+    return this.authService.refreshAccessToken(
+      refreshToken,
+      accessToken,
+      reply,
+      request,
+    );
   }
 }
