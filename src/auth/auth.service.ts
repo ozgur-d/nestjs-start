@@ -211,6 +211,9 @@ export class AuthService {
     token: string,
     expiresAt: Date,
   ): void {
+    //add reply header to refresh-token and refresh-token-expires-at
+    reply.header('refresh-token', token);
+    reply.header('refresh-token-expires-at', expiresAt.toISOString());
     reply.setCookie(this.COOKIE_NAME, token, {
       httpOnly: true,
       secure: true,

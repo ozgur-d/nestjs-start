@@ -39,7 +39,6 @@ async function bootstrap(): Promise<void> {
       bearerFormat: 'JWT',
       in: 'header',
     })
-    .addCookieAuth('refresh_token')
     .setTitle('API DOCUMENT')
     .setDescription('API DOCUMENT')
     .setVersion('1.0')
