@@ -1,11 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
-import {
-  DataSource,
-  EntitySubscriberInterface,
-  EventSubscriber,
-  InsertEvent,
-} from 'typeorm';
+import { DataSource, EntitySubscriberInterface, EventSubscriber, InsertEvent } from 'typeorm';
 import { Users } from './entities/users.entity';
 import { UsersService } from './users.service';
 
@@ -26,6 +21,6 @@ export class UsersSubscriber implements EntitySubscriberInterface<Users> {
   //example purpose
   async beforeInsert(event: InsertEvent<Users>): Promise<void> {
     await this.userService.executeBeforeUpdate();
-    console.log(event.entity, 'beforeInsert');
+    //console.log(event.entity, 'beforeInsert');
   }
 }

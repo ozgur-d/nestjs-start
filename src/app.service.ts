@@ -3,9 +3,7 @@ import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 
 /**************************************************/
-const envFile = process.env.NODE_ENV
-  ? `./.env.${process.env.NODE_ENV}`
-  : './.env';
+const envFile = process.env.NODE_ENV ? `./.env.${process.env.NODE_ENV}` : './.env';
 /**************************************************/
 // Helper function to preserve existing process.env values
 const loadEnvFile = (envPath: string): void => {
@@ -17,7 +15,7 @@ const loadEnvFile = (envPath: string): void => {
         process.env[key] = envConfig[key];
       }
     }
-  } catch (error) {
+  } catch {
     console.log(`ENV: ${envPath} not found`);
   }
 };

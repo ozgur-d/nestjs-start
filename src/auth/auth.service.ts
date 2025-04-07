@@ -85,7 +85,7 @@ export class AuthService {
     }
     try {
       return await this.createTokens(user, reply, request);
-    } catch (error) {
+    } catch {
       throw new UnauthorizedException('Token generation error');
     }
   }
@@ -121,8 +121,10 @@ export class AuthService {
     }
 
     try {
+      //expire refresh token
+      await this.invalidateToken(accessToken);
       return await this.createTokens(sessionToken.user, reply, request);
-    } catch (error) {
+    } catch {
       throw new UnauthorizedException('Token refresh failed');
     }
   }
@@ -132,16 +134,14 @@ export class AuthService {
     reply: FastifyReply,
     request: FastifyRequest,
   ): Promise<LoginResponseDto> {
-    const existingUser = await this.usersService.getUserByUsername(
-      registerInfo.username,
-    );
+    const existingUser = await this.usersService.getUserByUsername(registerInfo.username);
     if (existingUser) {
       throw new UnauthorizedException('This username is already in use');
     }
     const createdUser = await this.usersService.createUser(registerInfo);
     try {
       return await this.createTokens(createdUser, reply, request);
-    } catch (error) {
+    } catch {
       throw new UnauthorizedException('Token generation error');
     }
   }
@@ -151,8 +151,7 @@ export class AuthService {
     reply: FastifyReply,
     request: FastifyRequest,
   ): Promise<LoginResponseDto> {
-    const queryRunner =
-      this.sessionTokenRepository.manager.connection.createQueryRunner();
+    const queryRunner = this.sessionTokenRepository.manager.connection.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
@@ -206,11 +205,7 @@ export class AuthService {
     }
   }
 
-  private setRefreshTokenCookie(
-    reply: FastifyReply,
-    token: string,
-    expiresAt: Date,
-  ): void {
+  private setRefreshTokenCookie(reply: FastifyReply, token: string, expiresAt: Date): void {
     //add reply header to refresh-token and refresh-token-expires-at
     reply.header('refresh-token', token);
     reply.header('refresh-token-expires-at', expiresAt.toISOString());
@@ -231,6 +226,8 @@ export class AuthService {
   }
 
   private async generateRefreshToken(): Promise<string> {
+    await Promise.resolve();
+
     const uuid = crypto.randomUUID();
     const uuidBuffer = Buffer.from(uuid);
     const randomBytes = crypto.randomBytes(12);
@@ -273,7 +270,7 @@ export class AuthService {
       }
 
       return token.user;
-    } catch (error) {
+    } catch {
       throw new UnauthorizedException('Token verification error');
     }
   }

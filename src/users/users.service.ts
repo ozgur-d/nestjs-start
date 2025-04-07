@@ -38,13 +38,10 @@ export class UsersService {
 
     try {
       // bcrypt.compare function automatically extracts salt from hash and compares
-      const isPasswordValid: boolean = await bcrypt.compare(
-        loginDto.password,
-        user.password,
-      );
+      const isPasswordValid: boolean = await bcrypt.compare(loginDto.password, user.password);
 
       return isPasswordValid ? user : null;
-    } catch (err) {
+    } catch {
       throw new BadRequestException('Password verification failed');
     }
   }
@@ -60,20 +57,13 @@ export class UsersService {
       where: { id: Not(IsNull()) },
       relations: ['session_tokens'],
     };
-    return await this.utilsService.getPaginatedData(
-      Users,
-      queryOptions,
-      MeResponseDto,
-    );
+    return await this.utilsService.getPaginatedData(Users, queryOptions, MeResponseDto);
   }
 
   async createUser(registerDto: RegisterDto): Promise<Users> {
     try {
       // bcrypt.hash function automatically generates salt and combines it with hash
-      const hashedPassword: string = await bcrypt.hash(
-        registerDto.password,
-        this.SALT_ROUNDS,
-      );
+      const hashedPassword: string = await bcrypt.hash(registerDto.password, this.SALT_ROUNDS);
 
       const user: Users = this.usersRepository.create({
         username: registerDto.username,
@@ -81,15 +71,13 @@ export class UsersService {
       });
 
       return await this.usersRepository.save(user);
-    } catch (err) {
-      throw new BadRequestException(
-        'An error occurred while creating the user',
-      );
+    } catch {
+      throw new BadRequestException('An error occurred while creating the user');
     }
   }
 
   // Example purpose - should be removed if not used
-  async executeBeforeUpdate(): Promise<void> {
+  executeBeforeUpdate(): void {
     console.log('user before update service');
   }
 }

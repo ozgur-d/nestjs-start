@@ -1,18 +1,5 @@
-import {
-  Body,
-  Controller,
-  Post,
-  Req,
-  Res,
-  UnauthorizedException,
-} from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiHeader,
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { Body, Controller, Post, Req, Res, UnauthorizedException } from '@nestjs/common';
+import { ApiBearerAuth, ApiHeader, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -28,8 +15,7 @@ export class AuthController {
   @Post('login')
   @ApiOperation({
     summary: 'User login',
-    description:
-      'Authenticates user and returns access token with refresh token',
+    description: 'Authenticates user and returns access token with refresh token',
   })
   @ApiResponse({
     status: 200,
@@ -70,8 +56,7 @@ export class AuthController {
   @Post('register')
   @ApiOperation({
     summary: 'User registration',
-    description:
-      'Registers new user and returns access token with refresh token',
+    description: 'Registers new user and returns access token with refresh token',
   })
   @ApiResponse({
     status: 201,
@@ -135,11 +120,6 @@ export class AuthController {
       throw new UnauthorizedException('Access token not found');
     }
 
-    return this.authService.refreshAccessToken(
-      refreshToken,
-      accessToken,
-      reply,
-      request,
-    );
+    return this.authService.refreshAccessToken(refreshToken, accessToken, reply, request);
   }
 }

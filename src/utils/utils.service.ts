@@ -57,13 +57,10 @@ export class UtilsService {
     };
   }
 
-  public async mapToDto<T>(
-    source: unknown | unknown[],
-    dto: new () => T,
-  ): Promise<T | T[]> {
-    const mapSingle = async (item: unknown): Promise<T> => {
-      const plain = instanceToPlain(item as object);
-      const errors = await validate(item as object);
+  public async mapToDto<T>(source: object | object[], dto: new () => T): Promise<T | T[]> {
+    const mapSingle = async (item: object): Promise<T> => {
+      const plain = instanceToPlain(item);
+      const errors = await validate(item);
 
       if (errors.length > 0) {
         throw new Error(`Validation failed: ${JSON.stringify(errors)}`);
@@ -72,8 +69,6 @@ export class UtilsService {
       return plainToInstance(dto, plain, { excludeExtraneousValues: true });
     };
 
-    return Array.isArray(source)
-      ? Promise.all(source.map(mapSingle))
-      : mapSingle(source);
+    return Array.isArray(source) ? Promise.all(source.map(mapSingle)) : mapSingle(source);
   }
 }

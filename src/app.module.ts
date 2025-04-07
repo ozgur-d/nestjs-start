@@ -20,7 +20,6 @@ import { UtilsModule } from './utils/utils.module';
       synchronize: true,
       charset: 'utf8mb4',
       autoLoadEntities: true,
-      keepConnectionAlive: true,
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       //subscribers: [__dirname + '/**/*.subscriber{.ts,.js}'],
       // logging: process.env.NODE_ENV !== 'production',

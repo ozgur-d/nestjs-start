@@ -4,8 +4,8 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import { Reflector } from '@nestjs/core';
+import { AuthGuard } from '@nestjs/passport';
 import { Role } from '../../common/enums/role.enum';
 import { ROLES_KEY } from '../lib/roles.decorator';
 
@@ -36,22 +36,32 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     return super.canActivate(context);
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  handleRequest(err, user) {
+  // Define an interface for the expected user structure
+  private isUserWithRole(user: any): user is { role: string | string[] } {
+    return user && typeof user === 'object' && 'role' in user;
+  }
+
+  handleRequest(err: any, user: any): any {
     if (err || !user) {
       throw err || new UnauthorizedException('You should login first');
     }
 
     //this.role is contains user.role
     if (this.roles && this.roles.length) {
-      // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-      const hasRole = () =>
-        this.roles.some((role) => user.role?.includes(role));
+      const hasRole = (): boolean => {
+        if (!this.isUserWithRole(user)) {
+          return false;
+        }
+
+        if (Array.isArray(user.role)) {
+          return user.role.some((r) => this.roles.includes(r as Role));
+        }
+
+        return this.roles.includes(user.role as Role);
+      };
 
       if (!hasRole()) {
-        throw new ForbiddenException(
-          'You are not allowed to access this route',
-        );
+        throw new ForbiddenException('You are not allowed to access this route');
       }
     }
 

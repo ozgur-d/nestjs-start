@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
+import { FastifyRequest } from 'fastify';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { Users } from '../../users/entities/users.entity';
 import { AuthService } from '../auth.service';
@@ -19,10 +20,24 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(request: any): Promise<Users> {
-    let accessToken =
-      request.headers.authorization ?? request.query['access-token'];
-    accessToken = accessToken?.replace('Bearer ', '');
+  async validate(request: FastifyRequest): Promise<Users> {
+    const authHeader: string | undefined = request.headers?.authorization;
+
+    let queryToken: string | undefined;
+    const query = request.query as Record<string, unknown>;
+    if (query && typeof query === 'object' && 'access-token' in query) {
+      queryToken = query['access-token'] as string;
+    }
+
+    let accessToken: string | undefined = authHeader || queryToken;
+
+    if (typeof accessToken === 'string' && accessToken.startsWith('Bearer ')) {
+      accessToken = accessToken.replace('Bearer ', '');
+    }
+
+    if (!accessToken) {
+      throw new UnauthorizedException('No access token provided');
+    }
 
     const user = await this.authService.validateAccessToken(accessToken);
     return user;
