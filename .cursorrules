@@ -98,6 +98,9 @@ Generate code, corrections, and refactorings that comply with the basic principl
   - A services module with business logic and persistence.
     - Entities with TypeORM for data persistence.
     - One service per entity.
+  - A repository module with business logic and persistence.
+    - Entities with TypeORM for data persistence.
+    - One service per entity.
 - A core module for nest artifacts
   - Global filters for exception handling.
   - Global middlewares for request management.
