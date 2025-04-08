@@ -21,7 +21,7 @@ export class AuthService {
   private readonly REFRESH_TOKEN_EXPIRATION = process.env.REFRESH_EXPIRES_IN
     ? parseInt(process.env.REFRESH_EXPIRES_IN)
     : 7 * 24 * 60; // 7 days in minutes
-  private readonly COOKIE_NAME = 'refresh_token';
+  private readonly REFRESH_TOKEN_COOKIE_NAME = 'refresh_token';
 
   constructor(
     private readonly usersService: UsersService,
@@ -209,7 +209,7 @@ export class AuthService {
     //add reply header to refresh-token and refresh-token-expires-at
     reply.header('refresh-token', token);
     reply.header('refresh-token-expires-at', expiresAt.toISOString());
-    reply.setCookie(this.COOKIE_NAME, token, {
+    reply.setCookie(this.REFRESH_TOKEN_COOKIE_NAME, token, {
       httpOnly: true,
       secure: true,
       sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'none',
@@ -220,7 +220,7 @@ export class AuthService {
   }
 
   private clearRefreshTokenCookie(reply: FastifyReply): void {
-    reply.clearCookie(this.COOKIE_NAME, {
+    reply.clearCookie(this.REFRESH_TOKEN_COOKIE_NAME, {
       path: '/api/auth',
     });
   }
