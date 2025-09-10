@@ -1,0 +1,37 @@
+version: '3.9'
+
+# Docker Compose for local MySQL to use with the NestJS starter.
+# Start with: docker compose -f docker/docker-compose.yml up -d
+
+name: nestjs-starter
+
+services:
+  mysql:
+    image: mysql:9
+    container_name: nestjs-starter-mysql
+    restart: unless-stopped
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: AAlNNLkhabJOZxUiHvqYjsnvEjrMpMqiasPdMzTcNR
+      MYSQL_DATABASE: nestjs_starter_db
+      MYSQL_USER: nestjs_starter_user
+      MYSQL_PASSWORD: mlZTuMOvmsVJihrNPsscBVtAOujpXlNmRxUiiOc
+    ports:
+      - '3300:3306'
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ['CMD-SHELL', 'mysqladmin ping -h 127.0.0.1 -uroot -proot || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - localnet
+
+networks:
+  localnet:
+    name: nestjs-starter-net
+
+volumes:
+  mysql_data:
+    name: nestjs-starter-mysql-data

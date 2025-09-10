@@ -29,8 +29,8 @@ The project is using the current lts version node.js 20.10.0 and nestjs 10.3.0.
 First of all, if you have nvm, let's make sure you are using version 20.10.0
 
 ```bash
-  nvm install 22.14.0
-  nvm use 22.14.0
+  nvm install 22.19.0
+  nvm use 22.19.0
 ```
 
 To install all packages
