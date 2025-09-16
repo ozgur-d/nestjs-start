@@ -3,7 +3,7 @@ import { SessionResponseDto } from './session.response.dto';
 
 export class MeResponseDto {
   @Expose()
-  id: number;
+  id: string;
   @Expose()
   username: string;
   @Expose()

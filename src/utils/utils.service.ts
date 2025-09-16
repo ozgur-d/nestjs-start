@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
-import { instanceToPlain, plainToInstance } from 'class-transformer';
-import { validate } from 'class-validator';
+import { ClassConstructor, plainToInstance } from 'class-transformer';
 import { DataSource, FindOptionsOrder, FindOptionsWhere } from 'typeorm';
 import { PaginatorResponse } from './dto/paginator.response.dto';
 
@@ -44,7 +43,7 @@ export class UtilsService {
     const { page, limit } = options;
     const { data, total } = await this.executeQuery(entity, options);
 
-    const nodes = (await this.mapToDto(data, responseDto)) as ResponseType[];
+    const nodes = this.mapToDtos(data, responseDto);
     const pageSize = Math.min(limit, total);
 
     return {
@@ -57,7 +56,7 @@ export class UtilsService {
     };
   }
 
-  public async mapToDto<T>(source: object | object[], dto: new () => T): Promise<T | T[]> {
+  /* public async mapToDto<T>(source: object | object[], dto: new () => T): Promise<T | T[]> {
     const mapSingle = async (item: object): Promise<T> => {
       const plain = instanceToPlain(item);
       const errors = await validate(item);
@@ -70,5 +69,16 @@ export class UtilsService {
     };
 
     return Array.isArray(source) ? Promise.all(source.map(mapSingle)) : mapSingle(source);
+  } */
+
+  public mapToDto<V, T>(obj: V, Dto: ClassConstructor<T>): T {
+    return plainToInstance(Dto, obj as object, {
+      excludeExtraneousValues: true,
+      enableImplicitConversion: true,
+    });
+  }
+
+  public mapToDtos<V, T>(arr: V[], Dto: ClassConstructor<T>): T[] {
+    return arr.map((v) => this.mapToDto(v, Dto));
   }
 }

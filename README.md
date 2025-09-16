@@ -125,7 +125,7 @@ Auto mapper can be used to map the response object. You can use it in the follow
 For example, your entity is `Users` and you want to return `MeResponseDto` object.
 
 ```typescript
-await this.utilsService.mapToDto(getUser, MeResponseDto);
+this.utilsService.mapToDto(getUser, MeResponseDto);
 ```
 
 Your response will contain only id, username, role, test, and sessionTokens. We use class-validator and class-transformer for this. Because TypeScript cannot reflect the type of the DTO props. So we use class-transformer to resolve this problem.

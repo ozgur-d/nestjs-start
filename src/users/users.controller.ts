@@ -22,7 +22,7 @@ export class UsersController {
   @Get('me')
   async getProfile(@CurrentUser() user: Users): Promise<ResponseDto> {
     const getUser = await this.usersService.getUserByUsername(user.username);
-    const result = await this.utilsService.mapToDto(getUser, MeResponseDto);
+    const result = this.utilsService.mapToDto(getUser, MeResponseDto);
     return new ResponseDto(result);
   }
 
