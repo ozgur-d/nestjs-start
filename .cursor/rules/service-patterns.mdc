@@ -1,0 +1,12 @@
+---
+description: NestJS Service desenleri ve dependency injection
+globs: ["**/*.service.ts"]
+alwaysApply: false
+---
+
+# NestJS Service Patterns
+
+- Inject dependencies via constructor
+- Use `@InjectRepository(Entity)` for database access
+- Throw NestJS exceptions: `NotFoundException`, `BadRequestException`, etc.
+- Wrap multi-step database operations in transactions

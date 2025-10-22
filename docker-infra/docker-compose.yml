@@ -1,0 +1,62 @@
+version: '3.9'
+
+# Docker Compose for NestJS Starter - PostgreSQL 18 + Redis 8
+# Start with: docker compose -f docker-infra/docker-compose.yml up -d
+
+name: nestjs-starter
+
+services:
+  postgresql:
+    image: postgres:18-alpine
+    container_name: nestjs-postgresql
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: nestjs_starter_db
+      POSTGRES_USER: nestjs_user
+      POSTGRES_PASSWORD: 5WqiFnKLEZ7Zx67wj8q4JwQHxJLnmyyxMRsXufhB3a1ry9zNPa
+    ports:
+      - '2522:5432'
+    volumes:
+      - postgresql_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U nestjs_user -d nestjs_starter_db']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - nestjs-net
+
+  redis:
+    image: redis:8-alpine
+    container_name: nestjs-redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --requirepass BaPd4LRz02A0Thf3vwKsUERRqP26y0PZaZ8Uj3VqJum4zY8oqn
+      --maxmemory 2gb
+      --maxmemory-policy allkeys-lru
+      --appendonly yes
+      --appendfsync everysec
+      --auto-aof-rewrite-percentage 100
+      --auto-aof-rewrite-min-size 64mb
+      --save 900 1
+      --save 300 10
+      --save 60 10000
+    ports:
+      - '2523:6379'
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', '--raw', 'incr', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - nestjs-net
+networks:
+  nestjs-net:
+    name: nestjs-starter-net
+
+volumes:
+  postgresql_data:
+  redis_data:

@@ -15,7 +15,7 @@ import { Role } from '../../common/enums/role.enum';
 export class Users {
   @Index()
   @PrimaryGeneratedColumn('uuid')
-  id: number;
+  id: string;
 
   @Index({ unique: true })
   @Column()
@@ -39,9 +39,4 @@ export class Users {
     cascade: true,
   })
   session_tokens: SessionTokens[];
-
-  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  toJSON() {
-    return { ...this, password: undefined };
-  }
 }

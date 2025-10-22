@@ -1,8 +1,10 @@
 import { Role } from '../../common/enums/role.enum';
 
 export interface JwtPayload {
-  sub: number;
+  sub: string;
   username: string;
   roles: Role[];
-  type: 'access' | 'refresh';
+  jti: string; // JWT ID - unique identifier for each token
+  iat?: number; // Issued at timestamp (seconds) - auto-added by JWT
+  exp?: number; // Expiration timestamp (seconds) - auto-added by JWT
 }

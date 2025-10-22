@@ -1,10 +1,12 @@
-import { Body, Controller, Post, Req, Res, UnauthorizedException } from '@nestjs/common';
+import { Body, Controller, Post, Req, UnauthorizedException } from '@nestjs/common';
 import { ApiBearerAuth, ApiHeader, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { FastifyReply, FastifyRequest } from 'fastify';
+import type { FastifyRequest } from 'fastify';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { LoginResponseDto } from './dto/login.response.dto';
 import { RegisterDto } from './dto/register.dto';
+import type { ClientInfo as IClientInfo } from './interfaces/client-info.interface';
+import { ClientInfo } from './lib/client-info.decorator';
 
 @Controller('auth')
 @ApiTags('Authentication')
@@ -14,112 +16,66 @@ export class AuthController {
 
   @Post('login')
   @ApiOperation({
-    summary: 'User login',
-    description: 'Authenticates user and returns access token with refresh token',
+    summary: 'Public',
+    description:
+      'User login - Authenticates user and returns access token with refresh token in response body',
   })
   @ApiResponse({
     status: 200,
     description: 'Successfully authenticated',
-    headers: {
-      'Set-Cookie': {
-        description: 'HTTP-only cookie containing refresh token',
-        schema: {
-          type: 'string',
-          example: 'refresh_token=xxx; HttpOnly; Secure; SameSite=Strict',
-        },
-      },
-      'refresh-token': {
-        description: 'Refresh token (also available in cookie)',
-        schema: {
-          type: 'string',
-        },
-      },
-      'refresh-token-expires-at': {
-        description: 'Expiration timestamp of refresh token',
-        schema: {
-          type: 'string',
-          format: 'date-time',
-          example: '2024-03-21T12:00:00.000Z',
-        },
-      },
-    },
     type: LoginResponseDto,
   })
   async login(
     @Body() loginDto: LoginDto,
-    @Res({ passthrough: true }) reply: FastifyReply,
-    @Req() request: FastifyRequest,
+    @ClientInfo() clientInfo: IClientInfo,
   ): Promise<LoginResponseDto> {
-    return this.authService.login(loginDto, reply, request);
+    return this.authService.login(loginDto, clientInfo);
   }
 
   @Post('register')
   @ApiOperation({
-    summary: 'User registration',
-    description: 'Registers new user and returns access token with refresh token',
+    summary: 'Public',
+    description:
+      'User registration - Registers new user and returns access token with refresh token in response body',
   })
   @ApiResponse({
     status: 201,
     description: 'Successfully registered',
-    headers: {
-      'Set-Cookie': {
-        description: 'HTTP-only cookie containing refresh token',
-        schema: {
-          type: 'string',
-          example: 'refresh_token=xxx; HttpOnly; Secure; SameSite=Strict',
-        },
-      },
-      'refresh-token': {
-        description: 'Refresh token (also available in cookie)',
-        schema: {
-          type: 'string',
-        },
-      },
-      'refresh-token-expires-at': {
-        description: 'Expiration timestamp of refresh token',
-        schema: {
-          type: 'string',
-          format: 'date-time',
-          example: '2024-03-21T12:00:00.000Z',
-        },
-      },
-    },
     type: LoginResponseDto,
   })
   async register(
     @Body() registerDto: RegisterDto,
-    @Res({ passthrough: true }) reply: FastifyReply,
-    @Req() request: FastifyRequest,
+    @ClientInfo() clientInfo: IClientInfo,
   ): Promise<LoginResponseDto> {
-    return this.authService.register(registerDto, reply, request);
+    return this.authService.register(registerDto, clientInfo);
   }
 
   @Post('refresh-token')
+  @ApiOperation({
+    summary: 'Public',
+    description:
+      'Refresh access token using refresh token. Validates user-agent and IP address for security.',
+  })
   @ApiHeader({
     name: 'refresh-token',
-    description:
-      'Refresh token for authentication. you must send refresh-token with header or refresh_token with cookie auth. Authorization: Bearer access_token must be sent with header.',
+    description: 'Refresh token obtained from login/register response',
     required: true,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Successfully refreshed tokens',
+    type: LoginResponseDto,
   })
   async refreshToken(
     @Req() request: FastifyRequest,
-    @Res({ passthrough: true }) reply: FastifyReply,
+    @ClientInfo() clientInfo: IClientInfo,
   ): Promise<LoginResponseDto> {
-    let refreshToken = request.cookies['refresh_token'];
+    const refreshToken = request.headers['refresh-token'] as string;
 
     if (!refreshToken) {
-      refreshToken = request.headers['refresh-token'] as string;
+      throw new UnauthorizedException('Refresh token not found in headers');
     }
 
-    if (!refreshToken) {
-      throw new UnauthorizedException('Refresh token not found');
-    }
-
-    const accessToken = request.headers['authorization']?.split(' ')[1];
-    if (!accessToken) {
-      throw new UnauthorizedException('Access token not found');
-    }
-
-    return this.authService.refreshAccessToken(refreshToken, accessToken, reply, request);
+    return this.authService.refreshAccessToken(refreshToken, clientInfo);
   }
 }

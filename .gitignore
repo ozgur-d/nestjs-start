@@ -2,6 +2,7 @@
 ### JetBrains template
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio and Webstorm
 # Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
+public/uploads/
 
 # Users-specific stuff:
 .idea/**/workspace.xml
@@ -396,3 +397,8 @@ Temporary Items
 # Local
 .env
 dist
+
+# Docker environment files (production)
+docker-prod-conf/.env.app
+docker-prod-conf/.env.postgresql
+docker-prod-conf/.env.redis

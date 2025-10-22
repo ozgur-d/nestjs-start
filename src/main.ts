@@ -1,15 +1,37 @@
 import fastifyCookie from '@fastify/cookie';
-import { ValidationPipe } from '@nestjs/common';
+import fastifyMultipart from '@fastify/multipart';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Logger, ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { DateTime } from 'luxon';
+import { Cache } from 'cache-manager';
 import { AppModule } from './app.module';
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter());
+  const logger = new Logger('Bootstrap');
+  const app = await NestFactory.create<NestFastifyApplication>(
+    AppModule,
+    new FastifyAdapter({
+      trustProxy: true,
+      bodyLimit: 1024 * 1024 * 100, // 100mb
+      logger: false,
+    }),
+  );
 
-  app.setGlobalPrefix('api');
+  const configService = app.get(ConfigService);
+
+  // Redis bağlantısını test et
+  const cacheManager = app.get<Cache>(CACHE_MANAGER);
+  await cacheManager.set('health_check', 'ok', 5000);
+  const result = await cacheManager.get('health_check');
+  if (result !== 'ok') {
+    throw new Error('Redis connection test failed');
+  }
+  logger.log('✓ Redis connection successful');
+
+  app.setGlobalPrefix('api/v1');
 
   //validation class
   app.useGlobalPipes(
@@ -21,8 +43,15 @@ async function bootstrap(): Promise<void> {
 
   // Add cookie support
   await app.register(fastifyCookie, {
-    secret: process.env.COOKIE_SECRET || 'my-secret-548932857', // Secret for cookie signing
-    hook: 'onRequest', // Runs on every request
+    secret: configService.getOrThrow<string>('COOKIE_SECRET'),
+    hook: 'onRequest',
+  });
+
+  // Add multipart/form-data support
+  await app.register(fastifyMultipart, {
+    limits: {
+      fileSize: 1024 * 1024 * 100, // 100MB
+    },
   });
 
   //swagger config
@@ -38,17 +67,16 @@ async function bootstrap(): Promise<void> {
     .setVersion('1.0')
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document, {
+  SwaggerModule.setup('api-docs', app, document, {
     swaggerOptions: {
       persistAuthorization: true,
     },
   });
 
-  const isProd = process.env.NODE_ENV === 'production';
-
-  const allowedOrigins = isProd
-    ? [process.env.SITE_URL]
-    : [process.env.SITE_URL, 'http://localhost:3000'];
+  const node_env = configService.getOrThrow<string>('NODE_ENV');
+  const isProd = configService.getOrThrow<string>('NODE_ENV') === 'production';
+  const siteUrl = configService.getOrThrow<string>('SITE_URL');
+  const allowedOrigins = isProd ? [siteUrl] : [siteUrl, 'http://localhost:3000'];
 
   //allow any cors
   app.enableCors({
@@ -56,15 +84,12 @@ async function bootstrap(): Promise<void> {
     credentials: true,
   });
 
-  await app.listen(5656);
+  const port = configService.getOrThrow<number>('PORT', 5656);
+  await app.listen(port, '0.0.0.0');
+
+  //log node_env
+  logger.verbose(`🚀 Application is running on NODE_ENV: ${node_env}`);
+  logger.verbose(`🚀 Server is running on http://localhost:${port}/api-docs`);
 }
 
-bootstrap()
-  .then(() =>
-    console.log(
-      'Server started ' +
-        DateTime.now().toLocaleString(DateTime.DATETIME_MED) +
-        ' "http://localhost:5656/api" ',
-    ),
-  )
-  .catch((err) => console.log(err));
+bootstrap().catch((err) => console.log(err));

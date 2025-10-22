@@ -1,8 +1,6 @@
 import { Module } from '@nestjs/common';
-import { UtilsService } from './utils.service';
 
-@Module({
-  providers: [UtilsService],
-  exports: [UtilsService],
-})
+// Utils module artık sadece barrel export için kullanılıyor
+// Statik helper sınıfları DI gerektirmez
+@Module({})
 export class UtilsModule {}

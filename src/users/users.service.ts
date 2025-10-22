@@ -1,11 +1,12 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
-import { IsNull, Not, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { LoginDto } from '../auth/dto/login.dto';
 import { RegisterDto } from '../auth/dto/register.dto';
-import { PaginatorResponse } from '../utils/dto/paginator.response.dto';
-import { UtilsService } from '../utils/utils.service';
+import { PaginatorResponse } from '../common/dto/paginator.response.dto';
+import { DtoMapper } from '../utils';
+import { GetAllUsersDto } from './dto/get-all-user.dto';
 import { MeResponseDto } from './dto/me.response.dto';
 import { Users } from './entities/users.entity';
 
@@ -16,8 +17,6 @@ export class UsersService {
   constructor(
     @InjectRepository(Users)
     private readonly usersRepository: Repository<Users>,
-    @Inject(UtilsService)
-    private readonly utilsService: UtilsService,
   ) {}
 
   async getUserByUsername(username: string): Promise<Users> {
@@ -46,18 +45,27 @@ export class UsersService {
     }
   }
 
-  async getPaginatedUsers(
-    page: number = 1,
-    limit: number = 10,
-  ): Promise<PaginatorResponse<MeResponseDto>> {
-    const queryOptions = {
-      page,
-      limit,
-      order: { created_at: 'DESC' as const },
-      where: { id: Not(IsNull()) },
-      relations: ['session_tokens'],
+  async getPaginatedUsers(input: GetAllUsersDto): Promise<PaginatorResponse<MeResponseDto>> {
+    const queryBuilder = this.usersRepository
+      .createQueryBuilder('users')
+      .leftJoinAndSelect('users.session_tokens', 'session_tokens')
+      .orderBy('users.created_at', 'DESC')
+      .skip(input.limit * (input.page - 1))
+      .take(input.limit);
+
+    const [data, total] = await queryBuilder.getManyAndCount();
+
+    const nodes = DtoMapper.toDtos(data, MeResponseDto);
+    const pageSize = Math.min(input.limit, total);
+
+    return {
+      nodes,
+      current_page: input.page,
+      page_size: pageSize,
+      has_next: total > input.page * input.limit,
+      total_pages: Math.ceil(total / input.limit),
+      total_count: total,
     };
-    return await this.utilsService.getPaginatedData(Users, queryOptions, MeResponseDto);
   }
 
   async createUser(registerDto: RegisterDto): Promise<Users> {
@@ -74,10 +82,5 @@ export class UsersService {
     } catch {
       throw new BadRequestException('An error occurred while creating the user');
     }
-  }
-
-  // Example purpose - should be removed if not used
-  executeBeforeUpdate(): void {
-    console.log('user before update service');
   }
 }
