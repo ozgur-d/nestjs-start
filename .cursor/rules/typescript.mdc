@@ -31,5 +31,5 @@ alwaysApply: true
 **Verification:**
 
 - ALWAYS run `npm run build` after writing code
-- Fix ALL TypeScript/ESLint errors before completion
-- Run `npm run format` for consistent formatting
+- ALWAYS run `npm run lint` and fix ALL TypeScript/ESLint errors.
+- ALWAYS run `npm run format` for consistent formatting
