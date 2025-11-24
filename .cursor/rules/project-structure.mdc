@@ -1,6 +1,6 @@
 ---
 description: Proje yapısı ve modül desenleri
-globs: ["**/*.module.ts", "**/*.controller.ts", "**/*.service.ts"]
+globs: **/*.module.ts,**/*.controller.ts,**/*.service.ts
 alwaysApply: true
 ---
 

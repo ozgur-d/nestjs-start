@@ -1,6 +1,6 @@
 ---
 description: NestJS Service desenleri ve dependency injection
-globs: ["**/*.service.ts"]
+globs: **/*.service.ts
 alwaysApply: false
 ---
 

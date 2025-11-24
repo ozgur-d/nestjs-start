@@ -1,6 +1,6 @@
 ---
 description: DTO gereksinimleri ve validation kuralları
-globs: ["**/dto/**/*.ts"]
+globs: **/dto/**/*.ts
 alwaysApply: false
 ---
 

@@ -1,6 +1,6 @@
 ---
 description: HTTP istekleri için Node.js native fetch API kullanımı
-globs: ["**/*.ts"]
+globs: **/*.ts
 alwaysApply: false
 ---
 

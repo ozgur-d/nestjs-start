@@ -1,6 +1,6 @@
 ---
 description: TypeScript kod kalitesi ve zorunlu gereksinimler
-globs: ['**/*.ts', '**/*.js']
+globs: **/*.ts,**/*.js
 alwaysApply: true
 ---
 

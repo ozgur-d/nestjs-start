@@ -1,6 +1,6 @@
 ---
 description: NestJS Controller desenleri ve dekoratör kullanımı
-globs: ['**/*.controller.ts']
+globs: **/*.controller.ts
 alwaysApply: false
 ---
 
