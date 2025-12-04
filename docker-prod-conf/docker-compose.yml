@@ -21,8 +21,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
-    networks:
-      - nestjs-net
 
   redis:
     image: redis:8-alpine
@@ -51,8 +49,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
-    networks:
-      - nestjs-net
 
   api:
     build:
@@ -86,8 +82,6 @@ services:
       timeout: 10s
       start_period: 40s
       retries: 3
-    networks:
-      - nestjs-net
 
   nginx:
     image: nginx:1.28-alpine
@@ -107,12 +101,6 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-    networks:
-      - nestjs-net
-
-networks:
-  nestjs-net:
-    name: nestjs-starter-net
 
 volumes:
   postgresql_data:
