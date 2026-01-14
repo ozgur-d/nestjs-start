@@ -28,12 +28,12 @@ starter kit.
 
 ## Installation
 
-The project is using Node.js 22.19.0 LTS and NestJS 11.x with Fastify.
-First of all, if you have nvm, let's make sure you are using version 22.19.0
+The project is using Node.js 22.22.0 LTS and NestJS 11.x with Fastify.
+First of all, if you have nvm, let's make sure you are using version 22.22.0
 
 ```bash
-  nvm install 22.19.0
-  nvm use 22.19.0
+  nvm install 22.22.0
+  nvm use 22.22.0
 ```
 
 To install all packages

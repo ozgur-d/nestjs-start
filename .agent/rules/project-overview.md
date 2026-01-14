@@ -1,0 +1,33 @@
+---
+trigger: always_on
+---
+
+# NestJS Starter Kit
+
+## Project Overview
+
+**NestJS Starter Kit** is a production-ready backend API boilerplate built with modern best practices. This starter provides a solid foundation for building scalable REST APIs with authentication, authorization, database integration, caching, and comprehensive file upload capabilities.
+
+## Tech Stack
+
+- **Framework**: NestJS 11.x with Fastify (NOT Express)
+- **Runtime**: Node.js 22.19.0 LTS
+- **Language**: TypeScript 5.9.x (strict mode, isolatedModules enabled)
+- **Database**: PostgreSQL 18 + TypeORM 0.3.x (synchronize: true - NO migrations)
+- **Cache**: Redis with Keyv library
+- **Authentication**: JWT with Passport.js
+- **Validation**: class-validator + class-transformer
+- **API Docs**: Swagger/OpenAPI
+- **Date/Time**: Luxon
+- **HTTP Requests**: Native Node.js `fetch()` API (NO axios)
+
+## Key Features
+
+- **Authentication & Authorization**: JWT-based authentication with refresh token rotation, RBAC, session management
+- **Database Integration**: PostgreSQL with TypeORM (auto-sync enabled), entity auto-discovery
+- **Caching**: Redis integration with NestJS Cache Module
+- **File Upload System**: Comprehensive file upload with validation, image processing, and thumbnail generation
+- **API Documentation**: Swagger/OpenAPI with persistent authorization
+- **Standardized Responses**: Consistent API response format with ResponseDto
+- **Pagination**: Built-in pagination support with QueryBuilder
+- **Static Helpers**: DtoMapper and StringHelper utilities for common operations

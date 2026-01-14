@@ -1,0 +1,35 @@
+---
+trigger: glob
+globs: **/*.module.ts,**/*.controller.ts,**/*.service.ts
+---
+
+# Project Structure
+
+## Module Pattern
+
+Every feature module MUST follow this structure:
+
+**Required Files:**
+
+- `*.module.ts` - NestJS module definition with imports/providers
+- `*.controller.ts` - HTTP endpoints only, no business logic
+- `*.service.ts` - Business logic, database operations
+
+**Required Folders:**
+
+- `dto/` - Request/response DTOs with validation
+- `entities/` - TypeORM entities (if module uses database)
+
+**Optional:**
+
+- `interfaces/` - TypeScript type definitions
+- `guards/` - Custom guards
+- `lib/` - Utilities, decorators
+
+## Separation of Concerns
+
+- **Controllers**: HTTP layer, routing, decorators only
+- **Services**: Business logic, database queries, external API calls
+- **Entities**: Database schema with TypeORM decorators
+- **DTOs**: Input validation and response mapping
+- **Utils**: Static helper classes (NO dependency injection needed)

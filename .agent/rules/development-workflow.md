@@ -1,0 +1,28 @@
+---
+trigger: always_on
+---
+
+# Development Workflow
+
+## Before completing any code changes:
+
+1. Run `npm run build` to verify TypeScript compilation
+2. ALWAYS run `npm run lint` and fix ALL TypeScript/ESLint errors.
+3. Run `npm run format` for consistent formatting
+
+## Available Commands
+
+```bash
+npm run start:debug    # Dev server with hot-reload
+npm run build        # Compile TypeScript (REQUIRED before completion)
+npm run lint         # ESLint with auto-fix
+npm run format       # Prettier formatting
+```
+
+## Code Quality Checklist
+
+1. Write code with explicit types
+2. Run `npm run build` - verify compilation
+3. ALWAYS run `npm run lint` and fix ALL TypeScript/ESLint errors.
+4. Run `npm run format` - apply Prettier
+5. Verify Swagger docs are complete

@@ -1,0 +1,37 @@
+---
+trigger: glob
+globs: **/dto/**/*.ts
+---
+
+# DTO Requirements
+
+**Input DTOs (request body/query/params):**
+
+- Create for ALL inputs in `dto/` folder
+- Use class-validator: `@IsString()`, `@IsNotEmpty()`, `@IsEmail()`, etc.
+- Include `@ApiProperty()` for Swagger
+
+**Response DTOs:**
+
+- Naming: `*.response.dto.ts` (e.g., `login.response.dto.ts`)
+- Use `@Expose()` on ALL properties
+- Use `@Type(() => NestedDto)` for nested objects
+
+**Example:**
+
+```typescript
+export class UserResponseDto {
+  @Expose()
+  @ApiProperty()
+  id: number;
+
+  @Expose()
+  @ApiProperty()
+  email: string;
+
+  @Expose()
+  @Type(() => SubscriptionDto)
+  @ApiProperty({ type: SubscriptionDto })
+  subscription: SubscriptionDto;
+}
+```
