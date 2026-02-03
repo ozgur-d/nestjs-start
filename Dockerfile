@@ -1,6 +1,6 @@
 # Multi-stage Dockerfile for NestJS with Fastify
 # Stage 1: Dependencies
-FROM node:22.22.0-alpine AS dependencies
+FROM node:24.13.0-alpine AS dependencies
 
 WORKDIR /app
 
@@ -11,7 +11,7 @@ COPY package*.json ./
 RUN npm install
 
 # Stage 2: Build
-FROM node:22.22.0-alpine AS build
+FROM node:24.13.0-alpine AS build
 
 WORKDIR /app
 
@@ -35,7 +35,7 @@ RUN npm run build
 RUN npm prune --production
 
 # Stage 3: Production
-FROM node:22.22.0-alpine AS production
+FROM node:24.13.0-alpine AS production
 
 # Install dumb-init for proper signal handling
 RUN apk add --no-cache dumb-init
