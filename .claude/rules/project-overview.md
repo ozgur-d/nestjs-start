@@ -12,7 +12,7 @@ paths:
 ## Tech Stack
 
 - **Framework**: NestJS 11.x with Fastify (NOT Express)
-- **Runtime**: Node.js 22.19.0 LTS
+- **Runtime**: Node.js 24.13.0 LTS
 - **Language**: TypeScript 5.9.x (strict mode, isolatedModules enabled)
 - **Database**: PostgreSQL 18 + TypeORM 0.3.x (synchronize: true - NO migrations)
 - **Cache**: Redis with Keyv library

@@ -10,7 +10,7 @@ paths:
 
 - ALWAYS use Node.js native `fetch()` API for HTTP requests
 - NEVER use axios or other HTTP libraries
-- Node.js 22.x has built-in fetch support (no imports needed)
+- Node.js 24.x has built-in fetch support (no imports needed)
 
 **Example:**
 
