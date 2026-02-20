@@ -1,0 +1,62 @@
+---
+paths:
+  - "**/*.controller.ts"
+  - "**/*.service.ts"
+---
+
+# No Inline Type Definitions
+
+**MANDATORY:** Never define inline/anonymous type literals in function parameters, return types, or variable declarations. Always create a dedicated DTO or interface file and import it.
+
+## Bad (inline type)
+
+```typescript
+// WRONG - inline query type in controller
+@Get()
+async findAll(@Query() query: { page?: number; limit?: number; category_id?: number }) {}
+
+// WRONG - inline object type in service method
+async findAll(filters: { status?: string; is_active?: boolean }): Promise<Campaign[]> {}
+
+// WRONG - inline return type
+async getStats(): Promise<{ total: number; active: number }> {}
+```
+
+## Good (dedicated file)
+
+```typescript
+// dto/campaign-query.dto.ts
+export class CampaignQueryDto {
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @ApiPropertyOptional()
+  page?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @ApiPropertyOptional()
+  limit?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @ApiPropertyOptional()
+  category_id?: number;
+}
+
+// campaigns.controller.ts
+import { CampaignQueryDto } from './dto/campaign-query.dto';
+
+@Get()
+async findAll(@Query() query: CampaignQueryDto) {}
+```
+
+## Rules
+
+- **Query parameters** → create a `*-query.dto.ts` in `dto/` folder with class-validator decorators
+- **Request bodies** → create a `create-*.dto.ts` or `update-*.dto.ts` in `dto/` folder
+- **Response shapes** → create a `*.response.dto.ts` in `dto/` folder
+- **Service method parameters** → use the same DTO classes or create an `interface` in `interfaces/` folder
+- **Complex return types** → create a response DTO or interface

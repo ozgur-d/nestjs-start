@@ -1,5 +1,6 @@
 ---
-trigger: always_on
+paths:
+  - '**/*.ts'
 ---
 
 # Project Structure

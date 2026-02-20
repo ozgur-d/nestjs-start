@@ -1,0 +1,49 @@
+---
+paths:
+  - "**/*.controller.ts"
+---
+
+# NestJS Controller Patterns
+
+**Decorators:**
+
+- `@ApiBearerAuth()` - Add at CLASS level (not per route)
+- `@ApiOperation({ summary: Role.Admin + ', ' + Role.User })` - Must be include permission name, use public if its public. On every route
+- `@ApiResponse({ status: 200, type: ResponseDto })` - Document responses
+- `@UseInterceptors(CacheInterceptor)` - Add at CLASS level for 1-minute caching
+- `@UseGuards(CustomThrottlerGuard)` - Add at ROUTE level for rate limiting (proxy-aware IP detection)
+
+**Authorization:**
+
+- Global JWT guard is ACTIVE on all routes
+- Routes WITHOUT `@Roles()` = PUBLIC (authenticated but no role check)
+- Routes WITH `@Roles(Role.Admin)` = Role-restricted
+
+**Caching:**
+
+- Use `@UseInterceptors(CacheInterceptor)` at controller class level for automatic caching
+- Default TTL: 1 minute (configured in app.module.ts)
+- Best for: Read-heavy endpoints (hero sliders, pricing, products)
+- Avoid for: User-specific data, write operations, real-time data
+
+**Response Pattern:**
+
+```typescript
+// Always wrap in ResponseDto
+return new ResponseDto(data);
+return new ResponseDto(data, 'Custom message');
+
+// Map DTOs before returning using static helper
+import { DtoMapper } from '../utils';
+const result = DtoMapper.toDto(user, MeResponseDto);
+return new ResponseDto(result);
+```
+
+**Access User:**
+
+```typescript
+@Get('me')
+async getMe(@CurrentUser() user: Users): Promise<ResponseDto<MeResponseDto>> {
+  // user is automatically injected from JWT
+}
+```

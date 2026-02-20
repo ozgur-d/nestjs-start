@@ -1,6 +1,6 @@
 ---
 trigger: glob
-globs: **/*.ts
+globs: **/*.controller.ts,**/*.service.ts
 ---
 
 # HTTP Requests

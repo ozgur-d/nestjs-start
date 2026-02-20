@@ -1,7 +1,7 @@
 ---
-description: HTTP istekleri için Node.js native fetch API kullanımı
-globs: **/*.controller.ts,**/*.service.ts
-alwaysApply: false
+paths:
+  - '**/*.controller.ts'
+  - '**/*.service.ts'
 ---
 
 # HTTP Requests

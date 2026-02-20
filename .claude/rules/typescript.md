@@ -1,6 +1,6 @@
 ---
-trigger: glob
-globs: **/*.ts,**/*.js
+paths:
+  - "**/*.{ts,js}"
 ---
 
 ## Naming Conventions
